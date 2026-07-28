@@ -14,7 +14,120 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          body_weight: number | null
+          created_at: string
+          display_name: string
+          id: string
+          onboarded: boolean
+          sport: string | null
+          tracks: string[]
+          unit: string
+          updated_at: string
+        }
+        Insert: {
+          body_weight?: number | null
+          created_at?: string
+          display_name?: string
+          id: string
+          onboarded?: boolean
+          sport?: string | null
+          tracks?: string[]
+          unit?: string
+          updated_at?: string
+        }
+        Update: {
+          body_weight?: number | null
+          created_at?: string
+          display_name?: string
+          id?: string
+          onboarded?: boolean
+          sport?: string | null
+          tracks?: string[]
+          unit?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      routines: {
+        Row: {
+          created_at: string
+          description: string | null
+          exercises: Json
+          id: string
+          name: string
+          program_id: string | null
+          source: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          exercises?: Json
+          id?: string
+          name: string
+          program_id?: string | null
+          source?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          exercises?: Json
+          id?: string
+          name?: string
+          program_id?: string | null
+          source?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      workouts: {
+        Row: {
+          created_at: string
+          duration_sec: number
+          exercises: Json
+          finished_at: string
+          id: string
+          name: string
+          notes: string | null
+          started_at: string
+          total_sets: number
+          total_volume: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          duration_sec?: number
+          exercises?: Json
+          finished_at?: string
+          id?: string
+          name?: string
+          notes?: string | null
+          started_at?: string
+          total_sets?: number
+          total_volume?: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          duration_sec?: number
+          exercises?: Json
+          finished_at?: string
+          id?: string
+          name?: string
+          notes?: string | null
+          started_at?: string
+          total_sets?: number
+          total_volume?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
