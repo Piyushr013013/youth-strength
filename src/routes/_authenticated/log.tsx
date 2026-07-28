@@ -18,7 +18,7 @@ export const Route = createFileRoute("/_authenticated/log")({
 });
 
 function LogPage() {
-  const { workout, startWorkout } = useActiveWorkout();
+  const { workout, start } = useActiveWorkout();
   return (
     <div className="space-y-5">
       <h1 className="font-display text-3xl font-bold">Live logger</h1>
