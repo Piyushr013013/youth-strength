@@ -2,14 +2,14 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { Home, ListChecks, Play, Activity, Dumbbell, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const ITEMS = [
+const ITEMS: { to: string; label: string; icon: typeof Home; center?: boolean }[] = [
   { to: "/home", label: "Home", icon: Home },
   { to: "/routines", label: "Routines", icon: ListChecks },
   { to: "/log", label: "Live Log", icon: Play, center: true },
   { to: "/analysis", label: "Gaps", icon: Activity },
   { to: "/library", label: "Library", icon: Dumbbell },
   { to: "/profile", label: "Profile", icon: User },
-] as const;
+];
 
 export function BottomNav({ live }: { live?: boolean }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
