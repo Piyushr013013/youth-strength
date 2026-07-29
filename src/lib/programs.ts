@@ -1,4 +1,5 @@
 import type { RoutineExercise } from "./types";
+import { EXTRA_PROGRAMS } from "./programs-extended";
 
 export interface ProgramDay {
   day: string;
@@ -26,7 +27,7 @@ const x = (
   supersetGroup: number | null = null,
 ): RoutineExercise => ({ exerciseId, name, sets, reps, supersetGroup });
 
-export const PROGRAMS: Program[] = [
+const BASE_PROGRAMS: Program[] = [
   {
     id: "off-season-soccer-agility",
     name: "Off-Season Soccer Agility",
@@ -46,7 +47,7 @@ export const PROGRAMS: Program[] = [
           x("ath-cone-5105", "5-10-5 Pro Agility", 4, "1 rep", 1),
           x("db-bulgarian", "Bulgarian Split Squat", 3, "8 each"),
           x("kb-swing", "Kettlebell Swing", 3, "12"),
-          x("cal-copenhagen", "Copenhagen Plank", 3, "20s each"),
+          x("ath-copenhagen", "Copenhagen Plank", 3, "20s each"),
         ],
       },
       {
@@ -493,6 +494,8 @@ export const TRACKS = [
     sports: [],
   },
 ];
+
+export const PROGRAMS: Program[] = [...BASE_PROGRAMS, ...EXTRA_PROGRAMS];
 
 export function programById(id: string) {
   return PROGRAMS.find((p) => p.id === id);

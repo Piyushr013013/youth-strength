@@ -1,4 +1,5 @@
 import type { Exercise, ExerciseCategory } from "./types";
+import { EXTRA_EXERCISES } from "./exercises-extended";
 
 const e = (
   id: string,
@@ -10,7 +11,7 @@ const e = (
   metric: Exercise["metric"] = "weight_reps",
 ): Exercise => ({ id, name, category, muscles, equipment, pattern, metric });
 
-export const EXERCISES: Exercise[] = [
+const BASE_EXERCISES: Exercise[] = [
   // ---------- Resistance & Weightlifting ----------
   e("bb-back-squat", "Barbell Back Squat", "resistance", ["quads", "glutes"], "Barbell", "legs"),
   e("bb-front-squat", "Barbell Front Squat", "resistance", ["quads", "core"], "Barbell", "legs"),
@@ -136,6 +137,13 @@ export const EXERCISES: Exercise[] = [
   e("rec-box-breathing", "Box Breathing Reset", "recovery", ["mobility"], "None", "mobility", "time"),
   e("rec-walk", "Recovery Walk", "recovery", ["conditioning", "mobility"], "Outdoor", "mobility", "time"),
 ];
+
+const seen = new Set<string>();
+export const EXERCISES: Exercise[] = [...BASE_EXERCISES, ...EXTRA_EXERCISES]
+  .filter((x) => (seen.has(x.id) ? false : (seen.add(x.id), true)))
+  .sort((a, b) => a.name.localeCompare(b.name));
+
+
 
 export const CATEGORY_META: Record<
   ExerciseCategory,

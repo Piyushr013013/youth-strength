@@ -16,6 +16,7 @@ import { Route as AuthenticatedRoutinesRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedLogRouteImport } from './routes/_authenticated/log'
+import { Route as AuthenticatedLibraryRouteImport } from './routes/_authenticated/library'
 import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
 import { Route as AuthenticatedAnalysisRouteImport } from './routes/_authenticated/analysis'
 
@@ -53,6 +54,11 @@ const AuthenticatedLogRoute = AuthenticatedLogRouteImport.update({
   path: '/log',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedLibraryRoute = AuthenticatedLibraryRouteImport.update({
+  id: '/library',
+  path: '/library',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedHomeRoute = AuthenticatedHomeRouteImport.update({
   id: '/home',
   path: '/home',
@@ -69,6 +75,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/analysis': typeof AuthenticatedAnalysisRoute
   '/home': typeof AuthenticatedHomeRoute
+  '/library': typeof AuthenticatedLibraryRoute
   '/log': typeof AuthenticatedLogRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/profile': typeof AuthenticatedProfileRoute
@@ -79,6 +86,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/analysis': typeof AuthenticatedAnalysisRoute
   '/home': typeof AuthenticatedHomeRoute
+  '/library': typeof AuthenticatedLibraryRoute
   '/log': typeof AuthenticatedLogRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/profile': typeof AuthenticatedProfileRoute
@@ -91,6 +99,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/_authenticated/analysis': typeof AuthenticatedAnalysisRoute
   '/_authenticated/home': typeof AuthenticatedHomeRoute
+  '/_authenticated/library': typeof AuthenticatedLibraryRoute
   '/_authenticated/log': typeof AuthenticatedLogRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
@@ -103,6 +112,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/analysis'
     | '/home'
+    | '/library'
     | '/log'
     | '/onboarding'
     | '/profile'
@@ -113,6 +123,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/analysis'
     | '/home'
+    | '/library'
     | '/log'
     | '/onboarding'
     | '/profile'
@@ -124,6 +135,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/_authenticated/analysis'
     | '/_authenticated/home'
+    | '/_authenticated/library'
     | '/_authenticated/log'
     | '/_authenticated/onboarding'
     | '/_authenticated/profile'
@@ -187,6 +199,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedLogRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/library': {
+      id: '/_authenticated/library'
+      path: '/library'
+      fullPath: '/library'
+      preLoaderRoute: typeof AuthenticatedLibraryRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/home': {
       id: '/_authenticated/home'
       path: '/home'
@@ -207,6 +226,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAnalysisRoute: typeof AuthenticatedAnalysisRoute
   AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
+  AuthenticatedLibraryRoute: typeof AuthenticatedLibraryRoute
   AuthenticatedLogRoute: typeof AuthenticatedLogRoute
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
@@ -216,6 +236,7 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAnalysisRoute: AuthenticatedAnalysisRoute,
   AuthenticatedHomeRoute: AuthenticatedHomeRoute,
+  AuthenticatedLibraryRoute: AuthenticatedLibraryRoute,
   AuthenticatedLogRoute: AuthenticatedLogRoute,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
