@@ -11,7 +11,7 @@ const e = (
   metric: Exercise["metric"] = "weight_reps",
 ): Exercise => ({ id, name, category, muscles, equipment, pattern, metric });
 
-export const EXERCISES: Exercise[] = [
+const BASE_EXERCISES: Exercise[] = [
   // ---------- Resistance & Weightlifting ----------
   e("bb-back-squat", "Barbell Back Squat", "resistance", ["quads", "glutes"], "Barbell", "legs"),
   e("bb-front-squat", "Barbell Front Squat", "resistance", ["quads", "core"], "Barbell", "legs"),
