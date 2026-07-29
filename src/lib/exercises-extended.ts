@@ -248,7 +248,7 @@ export const EXTRA_EXERCISES: Exercise[] = [
   e("ath-mb-scoop-toss", "Med Ball Scoop Toss", "athletic", ["glutes", "core"], "Med Ball", "core", "reps"),
   e("ath-mb-shotput", "Med Ball Shot-Put Throw", "athletic", ["chest", "core"], "Med Ball", "push", "reps"),
   e("ath-lateral-hurdle-hop", "Lateral Hurdle Hop", "athletic", ["glutes", "calves"], "Hurdles", "legs", "reps"),
-  e("ath-dot-drill", "Dot Drill", "athletic", ["calves", "conditioning"], "Bodyguard", "cardio", "reps"),
+  e("ath-dot-drill", "Dot Drill", "athletic", ["calves", "conditioning"], "Dot Mat", "cardio", "reps"),
   e("ath-mirror-drill", "Partner Mirror Drill", "athletic", ["conditioning"], "Cones", "cardio", "time"),
 
   // ---------- Recovery / mobility / prehab ----------
