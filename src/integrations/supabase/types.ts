@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      friendships: {
+        Row: {
+          addressee_id: string
+          created_at: string
+          id: string
+          requester_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          addressee_id: string
+          created_at?: string
+          id?: string
+          requester_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          addressee_id?: string
+          created_at?: string
+          id?: string
+          requester_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           body_weight: number | null
@@ -133,7 +160,33 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      friend_profiles: {
+        Args: { ids: string[] }
+        Returns: {
+          display_name: string
+          id: string
+          sport: string
+        }[]
+      }
+      friends_leaderboard: {
+        Args: never
+        Returns: {
+          display_name: string
+          id: string
+          last_workout: string
+          sport: string
+          total_volume: number
+          workout_count: number
+        }[]
+      }
+      search_athletes: {
+        Args: { q: string }
+        Returns: {
+          display_name: string
+          id: string
+          sport: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
