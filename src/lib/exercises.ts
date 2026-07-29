@@ -138,6 +138,13 @@ const BASE_EXERCISES: Exercise[] = [
   e("rec-walk", "Recovery Walk", "recovery", ["conditioning", "mobility"], "Outdoor", "mobility", "time"),
 ];
 
+const seen = new Set<string>();
+export const EXERCISES: Exercise[] = [...BASE_EXERCISES, ...EXTRA_EXERCISES]
+  .filter((x) => (seen.has(x.id) ? false : (seen.add(x.id), true)))
+  .sort((a, b) => a.name.localeCompare(b.name));
+
+
+
 export const CATEGORY_META: Record<
   ExerciseCategory,
   { label: string; short: string; blurb: string }
