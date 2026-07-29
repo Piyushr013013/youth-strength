@@ -51,7 +51,7 @@ export const EXTRA_PROGRAMS: Program[] = [
           x("ath-qb-rollout-throw", "QB Rollout Throws", 4, "8 throws"),
           x("ath-cone-5105", "5-10-5 Pro Agility", 4, "1 rep"),
           x("ath-lateral-bound", "Lateral Skater Bound", 3, "6 each"),
-          x("cal-copenhagen-x", "Side Plank", 3, "30s each"),
+          x("cal-side-plank", "Side Plank", 3, "30s each"),
         ],
       },
       {
@@ -196,7 +196,7 @@ export const EXTRA_PROGRAMS: Program[] = [
           x("ath-cricket-bowling-run", "Bowling Run-Up Repeats", 6, "1 rep"),
           x("ath-broad-jump", "Standing Broad Jump", 4, "3"),
           x("bb-trapbar-dl", "Trap Bar Deadlift", 4, "4"),
-          x("cal-copenhagen-x", "Side Plank", 3, "30s each"),
+          x("cal-side-plank", "Side Plank", 3, "30s each"),
           x("mch-back-extension", "45° Back Extension", 3, "12"),
         ],
       },
@@ -432,7 +432,7 @@ export const EXTRA_PROGRAMS: Program[] = [
           x("bb-trapbar-jump", "Trap Bar Jump", 4, "3"),
           x("db-reverse-lunge", "Reverse Lunge", 3, "8 each"),
           x("ath-basketball-defslide", "Defensive Slide Drill", 4, "30s"),
-          x("cal-copenhagen-x", "Side Plank", 3, "30s each"),
+          x("cal-side-plank", "Side Plank", 3, "30s each"),
         ],
       },
       {
@@ -802,7 +802,7 @@ export const EXTRA_PROGRAMS: Program[] = [
           x("db-bulgarian", "Bulgarian Split Squat", 3, "8 each"),
           x("ath-lateral-bound", "Lateral Skater Bound", 4, "6 each"),
           x("cbl-pull-through", "Cable Pull-Through", 3, "12"),
-          x("cal-copenhagen-x", "Side Plank", 3, "30s each"),
+          x("cal-side-plank", "Side Plank", 3, "30s each"),
         ],
       },
       {
@@ -903,7 +903,7 @@ export const EXTRA_PROGRAMS: Program[] = [
           x("ath-lateral-bound", "Lateral Skater Bound", 5, "6 each"),
           x("bb-back-squat", "Barbell Back Squat", 4, "5"),
           x("mch-hip-abduction", "Hip Abduction Machine", 3, "15"),
-          x("cal-copenhagen-x", "Side Plank", 3, "30s each"),
+          x("cal-side-plank", "Side Plank", 3, "30s each"),
         ],
       },
       {
@@ -1104,7 +1104,7 @@ export const EXTRA_PROGRAMS: Program[] = [
           x("car-400-repeats", "400m Repeats", 6, "1 rep"),
           x("ath-soccer-rondo", "Rondo Possession", 4, "4 min"),
           x("cal-nordic", "Nordic Hamstring Curl", 3, "5"),
-          x("cal-copenhagen-x", "Side Plank", 3, "30s each"),
+          x("cal-side-plank", "Side Plank", 3, "30s each"),
           x("rec-walk", "Recovery Walk", 1, "10 min"),
         ],
       },
