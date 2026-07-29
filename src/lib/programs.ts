@@ -47,7 +47,7 @@ const BASE_PROGRAMS: Program[] = [
           x("ath-cone-5105", "5-10-5 Pro Agility", 4, "1 rep", 1),
           x("db-bulgarian", "Bulgarian Split Squat", 3, "8 each"),
           x("kb-swing", "Kettlebell Swing", 3, "12"),
-          x("cal-copenhagen", "Copenhagen Plank", 3, "20s each"),
+          x("ath-copenhagen", "Copenhagen Plank", 3, "20s each"),
         ],
       },
       {
