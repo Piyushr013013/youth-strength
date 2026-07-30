@@ -49,15 +49,16 @@ function RoutinesPage() {
     });
   }, [group, query]);
 
+  const { addExercises } = useActiveWorkout();
+
   const startDay = (program: Program, day: ProgramDay) => {
-    start({
-      name: `${program.name} — ${day.day}`,
-      exercises: day.exercises.map((e) => ({ exerciseId: e.exerciseId, sets: e.sets, reps: e.reps })),
-    });
+    start({ name: `${program.name} — ${day.day}`, exercises: [] });
+    addExercises(day.exercises.map((e) => e.exerciseId));
     toast.success("Session started");
     setOpen(null);
     navigate({ to: "/log" });
   };
+
 
   return (
     <div className="space-y-5 pb-32">
