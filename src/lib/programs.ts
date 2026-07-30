@@ -1,5 +1,6 @@
 import type { RoutineExercise } from "./types";
 import { EXTRA_PROGRAMS } from "./programs-extended";
+import { CATALOG_PROGRAMS } from "./programs-catalog";
 
 export interface ProgramDay {
   day: string;
@@ -16,6 +17,8 @@ export interface Program {
   level: "Beginner" | "Intermediate" | "Advanced";
   tracks: string[];
   accent: "lime" | "cyan" | "flare";
+  /** Sport / category tab this program belongs to. */
+  group?: string;
   days: ProgramDay[];
 }
 
@@ -495,7 +498,50 @@ export const TRACKS = [
   },
 ];
 
-export const PROGRAMS: Program[] = [...BASE_PROGRAMS, ...EXTRA_PROGRAMS];
+const SPORT_HINTS: [RegExp, string][] = [
+  [/quarterback|wide receiver|lineman|football|defensive|linebacker|running back|safety|cornerback|tight end|kicker|punter|edge/i, "Football"],
+  [/cricket/i, "Cricket"],
+  [/soccer/i, "Soccer"],
+  [/basketball/i, "Basketball"],
+  [/baseball|pitcher|hitter/i, "Baseball"],
+  [/track|sprint/i, "Track & Field"],
+  [/swim/i, "Swimming"],
+  [/tennis/i, "Tennis"],
+  [/rugby/i, "Rugby"],
+  [/volleyball/i, "Volleyball"],
+  [/hockey/i, "Hockey"],
+  [/wrestl/i, "Wrestling"],
+  [/golf/i, "Golf"],
+  [/lacrosse/i, "Lacrosse"],
+  [/mma|martial|boxing|combat/i, "MMA & Combat"],
+  [/powerlift|5\/3\/1|conjugate|texas/i, "Powerlifting"],
+  [/bodybuild|hypertrophy|physique|aesthetic/i, "Bodybuilding"],
+  [/calisthenic|gymnastic/i, "Calisthenics"],
+  [/olympic|weightlifting/i, "Olympic Lifting"],
+  [/speed|agility|plyo|vertical|jump/i, "Speed & Agility"],
+  [/condition|cut|fat|metabolic|endurance|runner|distance|triathlon/i, "Conditioning"],
+];
+
+function inferGroup(p: Program): string {
+  if (p.group) return p.group;
+  const hay = `${p.name} ${p.tagline}`;
+  for (const [re, group] of SPORT_HINTS) if (re.test(hay)) return group;
+  return "General";
+}
+
+const seenProgram = new Set<string>();
+export const PROGRAMS: Program[] = [...BASE_PROGRAMS, ...EXTRA_PROGRAMS, ...CATALOG_PROGRAMS]
+  .filter((p) => (seenProgram.has(p.id) ? false : (seenProgram.add(p.id), true)))
+  .map((p) => ({ ...p, group: inferGroup(p) }));
+
+/** Distinct program tabs, most-populated first (General last). */
+export function programGroups(): { group: string; count: number }[] {
+  const counts = new Map<string, number>();
+  for (const p of PROGRAMS) counts.set(p.group!, (counts.get(p.group!) ?? 0) + 1);
+  return [...counts.entries()]
+    .map(([group, count]) => ({ group, count }))
+    .sort((a, b) => (a.group === "General" ? 1 : b.group === "General" ? -1 : b.count - a.count));
+}
 
 export function programById(id: string) {
   return PROGRAMS.find((p) => p.id === id);

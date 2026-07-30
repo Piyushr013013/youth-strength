@@ -21,7 +21,7 @@ export const Route = createFileRoute("/_authenticated")({
 function Shell() {
   const { workout } = useActiveWorkout();
   return (
-    <div className="mx-auto min-h-screen w-full max-w-lg px-4 pt-6 safe-bottom">
+    <div className="safe-bottom mx-auto min-h-screen w-full max-w-lg px-4 pb-32 pt-6">
       <Outlet />
       <RestTimerOverlay />
       <BottomNav live={!!workout} />
