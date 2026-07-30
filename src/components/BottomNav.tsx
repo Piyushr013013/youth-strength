@@ -1,14 +1,14 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Home, ListChecks, Play, Activity, Dumbbell, User } from "lucide-react";
+import { Home, ListChecks, Play, Users, Dumbbell, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-type NavPath = "/home" | "/routines" | "/log" | "/analysis" | "/library" | "/profile";
+type NavPath = "/home" | "/routines" | "/log" | "/friends" | "/library" | "/profile";
 
 const ITEMS: { to: NavPath; label: string; icon: typeof Home; center?: boolean }[] = [
   { to: "/home", label: "Home", icon: Home },
-  { to: "/routines", label: "Routines", icon: ListChecks },
+  { to: "/routines", label: "Plans", icon: ListChecks },
   { to: "/log", label: "Live Log", icon: Play, center: true },
-  { to: "/analysis", label: "Gaps", icon: Activity },
+  { to: "/friends", label: "Friends", icon: Users },
   { to: "/library", label: "Library", icon: Dumbbell },
   { to: "/profile", label: "Profile", icon: User },
 ];
