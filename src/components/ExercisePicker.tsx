@@ -71,7 +71,7 @@ export function ExercisePicker({
         ))}
       </div>
 
-      <div className="mt-3 flex-1 space-y-2 overflow-y-auto pb-24">
+      <div className="mt-3 flex-1 space-y-2 overflow-y-auto pb-44">
         {results.length === 0 ? (
           <p className="py-10 text-center text-sm text-muted-foreground">
             No exercises match that search.
