@@ -69,6 +69,23 @@ function HomePage() {
         </Link>
       </motion.div>
 
+      <div className="grid grid-cols-2 gap-3">
+        <Link
+          to="/library"
+          className="glow-lime flex items-center justify-center rounded-2xl bg-primary py-4 text-center text-sm font-black uppercase tracking-wider text-primary-foreground"
+        >
+          Exercise library
+        </Link>
+        <Link
+          to="/friends"
+          className="flex items-center justify-center rounded-2xl border border-cyan/50 bg-surface-2/60 py-4 text-center text-sm font-black uppercase tracking-wider text-cyan"
+        >
+          Friends
+        </Link>
+      </div>
+
+
+
       <div className="grid grid-cols-3 gap-3">
         <StatTile label="Streak" value={`${streak}d`} accent="flare" />
         <StatTile label="This week" value={`${thisWeek}`} sub="sessions" accent="cyan" />
