@@ -29,7 +29,7 @@ export const Route = createFileRoute("/_authenticated/routines")({
 
 function RoutinesPage() {
   const navigate = useNavigate();
-  const { start } = useActiveWorkout();
+  const { start, addExercises } = useActiveWorkout();
   const routines = useQuery({ queryKey: ["routines"], queryFn: fetchRoutines });
   const groups = useMemo(() => programGroups(), []);
   const [group, setGroup] = useState<string | null>(null);
@@ -48,8 +48,6 @@ function RoutinesPage() {
       );
     });
   }, [group, query]);
-
-  const { addExercises } = useActiveWorkout();
 
   const startDay = (program: Program, day: ProgramDay) => {
     start({ name: `${program.name} — ${day.day}`, exercises: [] });
