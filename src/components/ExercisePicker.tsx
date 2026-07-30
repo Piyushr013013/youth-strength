@@ -111,19 +111,20 @@ export function ExercisePicker({
       </div>
 
       {selected.length > 0 ? (
-        <div className="sticky bottom-0 -mx-1 bg-gradient-to-t from-background via-background/95 to-transparent px-1 pb-1 pt-3">
+        <div className="sticky bottom-24 z-30 -mx-1 px-1 pb-2 pt-3">
           <button
             type="button"
             onClick={() => {
               onConfirm(selected);
               setSelected([]);
             }}
-            className="w-full rounded-xl bg-primary py-3 text-sm font-bold uppercase tracking-wider text-primary-foreground"
+            className="glow-lime w-full rounded-2xl bg-primary py-4 text-base font-black uppercase tracking-wider text-primary-foreground shadow-lg"
           >
             {confirmLabel} {selected.length} exercise{selected.length > 1 ? "s" : ""}
           </button>
         </div>
       ) : null}
+
     </div>
   );
 }
