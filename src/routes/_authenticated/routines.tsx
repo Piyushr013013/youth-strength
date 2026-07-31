@@ -29,9 +29,19 @@ export const Route = createFileRoute("/_authenticated/routines")({
 });
 
 function RoutinesPage() {
+  const { user } = Route.useRouteContext();
   const navigate = useNavigate();
+  const qc = useQueryClient();
   const { start, addExercises } = useActiveWorkout();
   const routines = useQuery({ queryKey: ["routines"], queryFn: fetchRoutines });
+  const schedule = useMutation({
+    mutationFn: (program: Program) => scheduleProgram(user.id, program, new Date()),
+    onSuccess: (count) => {
+      qc.invalidateQueries({ queryKey: ["scheduled"] });
+      toast.success(`${count} sessions added to your calendar`);
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
   const groups = useMemo(() => programGroups(), []);
   const [group, setGroup] = useState<string | null>(null);
   const [query, setQuery] = useState("");
