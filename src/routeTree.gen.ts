@@ -22,6 +22,7 @@ import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/h
 import { Route as AuthenticatedFriendsRouteImport } from './routes/_authenticated/friends'
 import { Route as AuthenticatedFormRouteImport } from './routes/_authenticated/form'
 import { Route as AuthenticatedCoachRouteImport } from './routes/_authenticated/coach'
+import { Route as AuthenticatedBuilderRouteImport } from './routes/_authenticated/builder'
 import { Route as AuthenticatedAnalysisRouteImport } from './routes/_authenticated/analysis'
 import { Route as AuthenticatedCoachIndexRouteImport } from './routes/_authenticated/coach.index'
 import { Route as AuthenticatedCoachThreadIdRouteImport } from './routes/_authenticated/coach.$threadId'
@@ -90,6 +91,11 @@ const AuthenticatedCoachRoute = AuthenticatedCoachRouteImport.update({
   path: '/coach',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedBuilderRoute = AuthenticatedBuilderRouteImport.update({
+  id: '/builder',
+  path: '/builder',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedAnalysisRoute = AuthenticatedAnalysisRouteImport.update({
   id: '/analysis',
   path: '/analysis',
@@ -111,6 +117,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/analysis': typeof AuthenticatedAnalysisRoute
+  '/builder': typeof AuthenticatedBuilderRoute
   '/coach': typeof AuthenticatedCoachRouteWithChildren
   '/form': typeof AuthenticatedFormRoute
   '/friends': typeof AuthenticatedFriendsRoute
@@ -128,6 +135,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/analysis': typeof AuthenticatedAnalysisRoute
+  '/builder': typeof AuthenticatedBuilderRoute
   '/form': typeof AuthenticatedFormRoute
   '/friends': typeof AuthenticatedFriendsRoute
   '/home': typeof AuthenticatedHomeRoute
@@ -146,6 +154,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/_authenticated/analysis': typeof AuthenticatedAnalysisRoute
+  '/_authenticated/builder': typeof AuthenticatedBuilderRoute
   '/_authenticated/coach': typeof AuthenticatedCoachRouteWithChildren
   '/_authenticated/form': typeof AuthenticatedFormRoute
   '/_authenticated/friends': typeof AuthenticatedFriendsRoute
@@ -165,6 +174,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/analysis'
+    | '/builder'
     | '/coach'
     | '/form'
     | '/friends'
@@ -182,6 +192,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/analysis'
+    | '/builder'
     | '/form'
     | '/friends'
     | '/home'
@@ -199,6 +210,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/_authenticated/analysis'
+    | '/_authenticated/builder'
     | '/_authenticated/coach'
     | '/_authenticated/form'
     | '/_authenticated/friends'
@@ -313,6 +325,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCoachRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/builder': {
+      id: '/_authenticated/builder'
+      path: '/builder'
+      fullPath: '/builder'
+      preLoaderRoute: typeof AuthenticatedBuilderRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/analysis': {
       id: '/_authenticated/analysis'
       path: '/analysis'
@@ -352,6 +371,7 @@ const AuthenticatedCoachRouteWithChildren =
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAnalysisRoute: typeof AuthenticatedAnalysisRoute
+  AuthenticatedBuilderRoute: typeof AuthenticatedBuilderRoute
   AuthenticatedCoachRoute: typeof AuthenticatedCoachRouteWithChildren
   AuthenticatedFormRoute: typeof AuthenticatedFormRoute
   AuthenticatedFriendsRoute: typeof AuthenticatedFriendsRoute
@@ -365,6 +385,7 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAnalysisRoute: AuthenticatedAnalysisRoute,
+  AuthenticatedBuilderRoute: AuthenticatedBuilderRoute,
   AuthenticatedCoachRoute: AuthenticatedCoachRouteWithChildren,
   AuthenticatedFormRoute: AuthenticatedFormRoute,
   AuthenticatedFriendsRoute: AuthenticatedFriendsRoute,
