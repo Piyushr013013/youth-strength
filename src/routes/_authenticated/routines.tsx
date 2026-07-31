@@ -160,6 +160,15 @@ function RoutinesPage() {
           </div>
           <div className="min-h-0 flex-1 space-y-3 overflow-y-auto pb-32">
             <p className="text-sm text-muted-foreground">{open.tagline}</p>
+            <button
+              onClick={() => schedule.mutate(open)}
+              disabled={schedule.isPending}
+              className="glow-lime flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3.5 text-sm font-black uppercase tracking-wider text-primary-foreground disabled:opacity-60"
+            >
+              <CalendarPlus size={16} />
+              {schedule.isPending ? "Adding…" : "Add whole plan to calendar"}
+            </button>
+
             {open.days.map((d) => (
               <GlassCard key={d.day} className="p-4">
                 <div className="flex items-center justify-between gap-3">
