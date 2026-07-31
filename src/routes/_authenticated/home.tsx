@@ -77,12 +77,25 @@ function HomePage() {
           Exercise library
         </Link>
         <Link
-          to="/friends"
+          to="/builder"
           className="flex items-center justify-center rounded-2xl border border-cyan/50 bg-surface-2/60 py-4 text-center text-sm font-black uppercase tracking-wider text-cyan"
         >
-          Friends
+          Build routine
+        </Link>
+        <Link
+          to="/progress"
+          className="flex items-center justify-center rounded-2xl border border-border bg-surface-2/60 py-4 text-center text-sm font-black uppercase tracking-wider"
+        >
+          Progress & PRs
+        </Link>
+        <Link
+          to="/form"
+          className="flex items-center justify-center rounded-2xl border border-flare/50 bg-surface-2/60 py-4 text-center text-sm font-black uppercase tracking-wider text-flare"
+        >
+          AI form judge
         </Link>
       </div>
+
 
 
 

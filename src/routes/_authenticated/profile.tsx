@@ -1,7 +1,11 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Trash2 } from "lucide-react";
+import { toast } from "sonner";
 import { fetchProfile, fetchWorkouts } from "@/lib/api";
+import { deleteScheduled, fetchScheduled, isoDay, type ScheduledWorkout } from "@/lib/schedule";
+import { useActiveWorkout } from "@/lib/active-workout";
 import { supabase } from "@/integrations/supabase/client";
 import { GlassCard, SectionTitle, StatTile } from "@/components/ui-kit";
 import { computeStreak, formatVolume, workoutVolume } from "@/lib/fitness";
@@ -34,6 +38,53 @@ function ProfilePage() {
   const navigate = useNavigate();
   const profile = useQuery({ queryKey: ["profile"], queryFn: () => fetchProfile(user.id) });
   const workouts = useQuery({ queryKey: ["workouts"], queryFn: fetchWorkouts });
+  const scheduled = useQuery({ queryKey: ["scheduled"], queryFn: fetchScheduled });
+  const { start, update } = useActiveWorkout();
+
+  const plannedByDay = useMemo(() => {
+    const map = new Map<string, ScheduledWorkout>();
+    for (const s of scheduled.data ?? []) if (!s.completed_at) map.set(s.scheduled_for, s);
+    return map;
+  }, [scheduled.data]);
+
+  const upcoming = useMemo(() => {
+    const today = isoDay(new Date());
+    return (scheduled.data ?? [])
+      .filter((s) => !s.completed_at && s.scheduled_for >= today)
+      .slice(0, 8);
+  }, [scheduled.data]);
+
+  const dropScheduled = useMutation({
+    mutationFn: deleteScheduled,
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["scheduled"] }),
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  function startScheduled(s: ScheduledWorkout) {
+    start({ name: s.name, exercises: [] });
+    update((w) => ({
+      ...w,
+      exercises: (s.exercises ?? []).map((it, i) => ({
+        id: `${it.exerciseId}-${i}`,
+        exerciseId: it.exerciseId,
+        name: it.name,
+        metric: "weight_reps" as const,
+        supersetGroup: it.supersetGroup ?? null,
+        sets: Array.from({ length: Math.max(1, it.sets) }, (_, j) => ({
+          id: `${it.exerciseId}-${i}-${j}`,
+          type: "normal" as const,
+          weight: null,
+          reps: null,
+          seconds: null,
+          rpe: null,
+          done: false,
+        })),
+      })),
+    }));
+    toast.success("Session started");
+    navigate({ to: "/log" });
+  }
+
 
   const stats = useMemo(() => {
     const list = workouts.data ?? [];
@@ -110,20 +161,27 @@ function ProfilePage() {
                 ))}
                 {m.cells.map((key, i) => {
                   const entry = key ? stats.byDay.get(key) : undefined;
-                  const isToday = key === new Date().toISOString().slice(0, 10);
+                  const planned = key ? plannedByDay.get(key) : undefined;
+                  const isToday = key === isoDay(new Date());
                   return (
                     <span
                       key={i}
-                      title={entry ? `${entry.count} session(s) · ${formatVolume(entry.volume)}` : key ?? ""}
+                      title={
+                        entry
+                          ? `${entry.count} session(s) · ${formatVolume(entry.volume)}`
+                          : (planned?.name ?? key ?? "")
+                      }
                       className={cn(
                         "flex aspect-square items-center justify-center rounded-md text-[10px] font-semibold",
                         !key && "opacity-0",
                         key && !entry && "bg-surface-2/60 text-muted-foreground",
+                        key && !entry && planned && "border border-cyan/70 text-cyan",
                         entry && "bg-primary/70 text-primary-foreground",
                         entry && entry.count > 1 && "bg-primary glow-lime",
                         isToday && "ring-1 ring-cyan",
                       )}
                     >
+
                       {key ? Number(key.slice(-2)) : ""}
                     </span>
                   );
@@ -133,6 +191,54 @@ function ProfilePage() {
           ))}
         </div>
       </section>
+
+      <section>
+        <SectionTitle
+          action={
+            <Link to="/routines" className="text-xs text-lime">
+              Add a plan
+            </Link>
+          }
+        >
+          Scheduled sessions
+        </SectionTitle>
+        <div className="space-y-2">
+          {upcoming.map((s) => (
+            <GlassCard key={s.id} className="flex items-center gap-3 p-4">
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-semibold">{s.name}</p>
+                <p className="text-xs text-muted-foreground">
+                  {new Date(`${s.scheduled_for}T12:00:00`).toLocaleDateString(undefined, {
+                    weekday: "short",
+                    month: "short",
+                    day: "numeric",
+                  })}
+                  {s.focus ? ` · ${s.focus}` : ""}
+                </p>
+              </div>
+              <button
+                onClick={() => startScheduled(s)}
+                className="shrink-0 rounded-lg bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground"
+              >
+                Start
+              </button>
+              <button
+                onClick={() => dropScheduled.mutate(s.id)}
+                aria-label={`Remove ${s.name}`}
+                className="shrink-0 text-muted-foreground"
+              >
+                <Trash2 size={15} />
+              </button>
+            </GlassCard>
+          ))}
+          {!upcoming.length ? (
+            <GlassCard className="p-5 text-sm text-muted-foreground">
+              Nothing scheduled — add a program to your calendar from the Plans tab.
+            </GlassCard>
+          ) : null}
+        </div>
+      </section>
+
 
       <section>
         <SectionTitle>Recent sessions</SectionTitle>

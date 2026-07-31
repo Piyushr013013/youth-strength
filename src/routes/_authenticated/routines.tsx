@@ -1,9 +1,10 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { Search, Play, ChevronRight, X } from "lucide-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Search, Play, ChevronRight, X, CalendarPlus } from "lucide-react";
 import { toast } from "sonner";
 import { fetchRoutines } from "@/lib/api";
+import { scheduleProgram } from "@/lib/schedule";
 import { PROGRAMS, programGroups, type Program, type ProgramDay } from "@/lib/programs";
 import { GlassCard, SectionTitle, Chip } from "@/components/ui-kit";
 import { useActiveWorkout } from "@/lib/active-workout";
@@ -28,9 +29,19 @@ export const Route = createFileRoute("/_authenticated/routines")({
 });
 
 function RoutinesPage() {
+  const { user } = Route.useRouteContext();
   const navigate = useNavigate();
+  const qc = useQueryClient();
   const { start, addExercises } = useActiveWorkout();
   const routines = useQuery({ queryKey: ["routines"], queryFn: fetchRoutines });
+  const schedule = useMutation({
+    mutationFn: (program: Program) => scheduleProgram(user.id, program, new Date()),
+    onSuccess: (count) => {
+      qc.invalidateQueries({ queryKey: ["scheduled"] });
+      toast.success(`${count} sessions added to your calendar`);
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
   const groups = useMemo(() => programGroups(), []);
   const [group, setGroup] = useState<string | null>(null);
   const [query, setQuery] = useState("");
@@ -160,6 +171,15 @@ function RoutinesPage() {
           </div>
           <div className="min-h-0 flex-1 space-y-3 overflow-y-auto pb-32">
             <p className="text-sm text-muted-foreground">{open.tagline}</p>
+            <button
+              onClick={() => schedule.mutate(open)}
+              disabled={schedule.isPending}
+              className="glow-lime flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3.5 text-sm font-black uppercase tracking-wider text-primary-foreground disabled:opacity-60"
+            >
+              <CalendarPlus size={16} />
+              {schedule.isPending ? "Adding…" : "Add whole plan to calendar"}
+            </button>
+
             {open.days.map((d) => (
               <GlassCard key={d.day} className="p-4">
                 <div className="flex items-center justify-between gap-3">

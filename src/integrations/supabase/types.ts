@@ -14,6 +14,104 @@ export type Database = {
   }
   public: {
     Tables: {
+      coach_messages: {
+        Row: {
+          created_at: string
+          id: string
+          message: Json
+          role: string
+          thread_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message: Json
+          role: string
+          thread_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: Json
+          role?: string
+          thread_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coach_messages_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "coach_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      coach_threads: {
+        Row: {
+          created_at: string
+          id: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          title?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      form_checks: {
+        Row: {
+          created_at: string
+          cues: Json
+          exercise_id: string | null
+          exercise_name: string
+          feedback: string | null
+          id: string
+          score: number | null
+          user_id: string
+          verdict: string | null
+          video_path: string | null
+        }
+        Insert: {
+          created_at?: string
+          cues?: Json
+          exercise_id?: string | null
+          exercise_name: string
+          feedback?: string | null
+          id?: string
+          score?: number | null
+          user_id: string
+          verdict?: string | null
+          video_path?: string | null
+        }
+        Update: {
+          created_at?: string
+          cues?: Json
+          exercise_id?: string | null
+          exercise_name?: string
+          feedback?: string | null
+          id?: string
+          score?: number | null
+          user_id?: string
+          verdict?: string | null
+          video_path?: string | null
+        }
+        Relationships: []
+      }
       friendships: {
         Row: {
           addressee_id: string
@@ -109,6 +207,45 @@ export type Database = {
           program_id?: string | null
           source?: string
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      scheduled_workouts: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          day_label: string | null
+          exercises: Json
+          focus: string | null
+          id: string
+          name: string
+          program_id: string | null
+          scheduled_for: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          day_label?: string | null
+          exercises?: Json
+          focus?: string | null
+          id?: string
+          name: string
+          program_id?: string | null
+          scheduled_for: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          day_label?: string | null
+          exercises?: Json
+          focus?: string | null
+          id?: string
+          name?: string
+          program_id?: string | null
+          scheduled_for?: string
           user_id?: string
         }
         Relationships: []

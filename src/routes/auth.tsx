@@ -9,6 +9,7 @@ import { GlassCard } from "@/components/ui-kit";
 import { useAuthUser } from "@/hooks/useAuthUser";
 
 export const Route = createFileRoute("/auth")({
+  ssr: false,
   head: () => ({
     meta: [
       { title: "Sign in — ATHLETE OS" },
