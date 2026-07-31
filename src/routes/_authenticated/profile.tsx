@@ -1,7 +1,11 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Trash2 } from "lucide-react";
+import { toast } from "sonner";
 import { fetchProfile, fetchWorkouts } from "@/lib/api";
+import { deleteScheduled, fetchScheduled, isoDay, type ScheduledWorkout } from "@/lib/schedule";
+import { useActiveWorkout } from "@/lib/active-workout";
 import { supabase } from "@/integrations/supabase/client";
 import { GlassCard, SectionTitle, StatTile } from "@/components/ui-kit";
 import { computeStreak, formatVolume, workoutVolume } from "@/lib/fitness";
