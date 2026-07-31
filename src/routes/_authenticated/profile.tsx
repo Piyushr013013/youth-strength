@@ -135,6 +135,54 @@ function ProfilePage() {
       </section>
 
       <section>
+        <SectionTitle
+          action={
+            <Link to="/routines" className="text-xs text-lime">
+              Add a plan
+            </Link>
+          }
+        >
+          Scheduled sessions
+        </SectionTitle>
+        <div className="space-y-2">
+          {upcoming.map((s) => (
+            <GlassCard key={s.id} className="flex items-center gap-3 p-4">
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-semibold">{s.name}</p>
+                <p className="text-xs text-muted-foreground">
+                  {new Date(`${s.scheduled_for}T12:00:00`).toLocaleDateString(undefined, {
+                    weekday: "short",
+                    month: "short",
+                    day: "numeric",
+                  })}
+                  {s.focus ? ` · ${s.focus}` : ""}
+                </p>
+              </div>
+              <button
+                onClick={() => startScheduled(s)}
+                className="shrink-0 rounded-lg bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground"
+              >
+                Start
+              </button>
+              <button
+                onClick={() => dropScheduled.mutate(s.id)}
+                aria-label={`Remove ${s.name}`}
+                className="shrink-0 text-muted-foreground"
+              >
+                <Trash2 size={15} />
+              </button>
+            </GlassCard>
+          ))}
+          {!upcoming.length ? (
+            <GlassCard className="p-5 text-sm text-muted-foreground">
+              Nothing scheduled — add a program to your calendar from the Plans tab.
+            </GlassCard>
+          ) : null}
+        </div>
+      </section>
+
+
+      <section>
         <SectionTitle>Recent sessions</SectionTitle>
         <div className="space-y-2">
           {(workouts.data ?? []).slice(0, 8).map((w) => (
