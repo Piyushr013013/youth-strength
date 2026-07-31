@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as AuthenticatedRoutinesRouteImport } from './routes/_authenticated/routines'
+import { Route as AuthenticatedProgressRouteImport } from './routes/_authenticated/progress'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedLogRouteImport } from './routes/_authenticated/log'
@@ -49,6 +50,11 @@ const ApiChatRoute = ApiChatRouteImport.update({
 const AuthenticatedRoutinesRoute = AuthenticatedRoutinesRouteImport.update({
   id: '/routines',
   path: '/routines',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedProgressRoute = AuthenticatedProgressRouteImport.update({
+  id: '/progress',
+  path: '/progress',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
@@ -126,6 +132,7 @@ export interface FileRoutesByFullPath {
   '/log': typeof AuthenticatedLogRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/profile': typeof AuthenticatedProfileRoute
+  '/progress': typeof AuthenticatedProgressRoute
   '/routines': typeof AuthenticatedRoutinesRoute
   '/api/chat': typeof ApiChatRoute
   '/coach/$threadId': typeof AuthenticatedCoachThreadIdRoute
@@ -143,6 +150,7 @@ export interface FileRoutesByTo {
   '/log': typeof AuthenticatedLogRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/profile': typeof AuthenticatedProfileRoute
+  '/progress': typeof AuthenticatedProgressRoute
   '/routines': typeof AuthenticatedRoutinesRoute
   '/api/chat': typeof ApiChatRoute
   '/coach/$threadId': typeof AuthenticatedCoachThreadIdRoute
@@ -163,6 +171,7 @@ export interface FileRoutesById {
   '/_authenticated/log': typeof AuthenticatedLogRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
+  '/_authenticated/progress': typeof AuthenticatedProgressRoute
   '/_authenticated/routines': typeof AuthenticatedRoutinesRoute
   '/api/chat': typeof ApiChatRoute
   '/_authenticated/coach/$threadId': typeof AuthenticatedCoachThreadIdRoute
@@ -183,6 +192,7 @@ export interface FileRouteTypes {
     | '/log'
     | '/onboarding'
     | '/profile'
+    | '/progress'
     | '/routines'
     | '/api/chat'
     | '/coach/$threadId'
@@ -200,6 +210,7 @@ export interface FileRouteTypes {
     | '/log'
     | '/onboarding'
     | '/profile'
+    | '/progress'
     | '/routines'
     | '/api/chat'
     | '/coach/$threadId'
@@ -219,6 +230,7 @@ export interface FileRouteTypes {
     | '/_authenticated/log'
     | '/_authenticated/onboarding'
     | '/_authenticated/profile'
+    | '/_authenticated/progress'
     | '/_authenticated/routines'
     | '/api/chat'
     | '/_authenticated/coach/$threadId'
@@ -267,6 +279,13 @@ declare module '@tanstack/react-router' {
       path: '/routines'
       fullPath: '/routines'
       preLoaderRoute: typeof AuthenticatedRoutinesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/progress': {
+      id: '/_authenticated/progress'
+      path: '/progress'
+      fullPath: '/progress'
+      preLoaderRoute: typeof AuthenticatedProgressRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/profile': {
@@ -380,6 +399,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedLogRoute: typeof AuthenticatedLogRoute
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
+  AuthenticatedProgressRoute: typeof AuthenticatedProgressRoute
   AuthenticatedRoutinesRoute: typeof AuthenticatedRoutinesRoute
 }
 
@@ -394,6 +414,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedLogRoute: AuthenticatedLogRoute,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
+  AuthenticatedProgressRoute: AuthenticatedProgressRoute,
   AuthenticatedRoutinesRoute: AuthenticatedRoutinesRoute,
 }
 
