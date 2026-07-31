@@ -1,9 +1,10 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { Search, Play, ChevronRight, X } from "lucide-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Search, Play, ChevronRight, X, CalendarPlus } from "lucide-react";
 import { toast } from "sonner";
 import { fetchRoutines } from "@/lib/api";
+import { scheduleProgram } from "@/lib/schedule";
 import { PROGRAMS, programGroups, type Program, type ProgramDay } from "@/lib/programs";
 import { GlassCard, SectionTitle, Chip } from "@/components/ui-kit";
 import { useActiveWorkout } from "@/lib/active-workout";
