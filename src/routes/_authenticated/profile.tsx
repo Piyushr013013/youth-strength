@@ -38,6 +38,53 @@ function ProfilePage() {
   const navigate = useNavigate();
   const profile = useQuery({ queryKey: ["profile"], queryFn: () => fetchProfile(user.id) });
   const workouts = useQuery({ queryKey: ["workouts"], queryFn: fetchWorkouts });
+  const scheduled = useQuery({ queryKey: ["scheduled"], queryFn: fetchScheduled });
+  const { start, update } = useActiveWorkout();
+
+  const plannedByDay = useMemo(() => {
+    const map = new Map<string, ScheduledWorkout>();
+    for (const s of scheduled.data ?? []) if (!s.completed_at) map.set(s.scheduled_for, s);
+    return map;
+  }, [scheduled.data]);
+
+  const upcoming = useMemo(() => {
+    const today = isoDay(new Date());
+    return (scheduled.data ?? [])
+      .filter((s) => !s.completed_at && s.scheduled_for >= today)
+      .slice(0, 8);
+  }, [scheduled.data]);
+
+  const dropScheduled = useMutation({
+    mutationFn: deleteScheduled,
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["scheduled"] }),
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  function startScheduled(s: ScheduledWorkout) {
+    start({ name: s.name, exercises: [] });
+    update((w) => ({
+      ...w,
+      exercises: (s.exercises ?? []).map((it, i) => ({
+        id: `${it.exerciseId}-${i}`,
+        exerciseId: it.exerciseId,
+        name: it.name,
+        metric: "weight_reps" as const,
+        supersetGroup: it.supersetGroup ?? null,
+        sets: Array.from({ length: Math.max(1, it.sets) }, (_, j) => ({
+          id: `${it.exerciseId}-${i}-${j}`,
+          type: "normal" as const,
+          weight: null,
+          reps: null,
+          seconds: null,
+          rpe: null,
+          done: false,
+        })),
+      })),
+    }));
+    toast.success("Session started");
+    navigate({ to: "/log" });
+  }
+
 
   const stats = useMemo(() => {
     const list = workouts.data ?? [];
