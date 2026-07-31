@@ -114,20 +114,27 @@ function ProfilePage() {
                 ))}
                 {m.cells.map((key, i) => {
                   const entry = key ? stats.byDay.get(key) : undefined;
-                  const isToday = key === new Date().toISOString().slice(0, 10);
+                  const planned = key ? plannedByDay.get(key) : undefined;
+                  const isToday = key === isoDay(new Date());
                   return (
                     <span
                       key={i}
-                      title={entry ? `${entry.count} session(s) · ${formatVolume(entry.volume)}` : key ?? ""}
+                      title={
+                        entry
+                          ? `${entry.count} session(s) · ${formatVolume(entry.volume)}`
+                          : (planned?.name ?? key ?? "")
+                      }
                       className={cn(
                         "flex aspect-square items-center justify-center rounded-md text-[10px] font-semibold",
                         !key && "opacity-0",
                         key && !entry && "bg-surface-2/60 text-muted-foreground",
+                        key && !entry && planned && "border border-cyan/70 text-cyan",
                         entry && "bg-primary/70 text-primary-foreground",
                         entry && entry.count > 1 && "bg-primary glow-lime",
                         isToday && "ring-1 ring-cyan",
                       )}
                     >
+
                       {key ? Number(key.slice(-2)) : ""}
                     </span>
                   );
