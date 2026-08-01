@@ -8,7 +8,8 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchThreadMessages, messageText, renameThread } from "@/lib/coach";
 import coachMark from "@/assets/coach-mark.png";
-import { cn } from "@/lib/utils";
+import { Markdown } from "@/components/Markdown";
+import { CoachToolCard } from "@/components/CoachToolCard";
 
 export const Route = createFileRoute("/_authenticated/coach/$threadId")({
   validateSearch: (search: Record<string, unknown>) => ({
