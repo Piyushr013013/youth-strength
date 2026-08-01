@@ -73,6 +73,8 @@ export const Route = createFileRoute("/api/chat")({
         const result = streamText({
           model: gateway(COACH_MODEL),
           system: SYSTEM,
+          tools: coachTools(supabase, userId),
+          stopWhen: stepCountIs(6),
           messages: await convertToModelMessages(uiMessages),
         });
 
