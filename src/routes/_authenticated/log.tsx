@@ -140,18 +140,24 @@ function LogPage() {
       {workout.exercises.map((ex) => (
         <GlassCard key={ex.id} className="p-4">
           <div className="flex items-center justify-between gap-2">
-            <p className="text-sm font-semibold">{ex.name}</p>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold">{ex.name}</p>
+              <p className="text-[11px] text-muted-foreground">
+                Last: {formatLast(last.get(ex.exerciseId))}
+              </p>
+            </div>
             <button
               type="button"
               onClick={() =>
                 update((w) => ({ ...w, exercises: w.exercises.filter((e) => e.id !== ex.id) }))
               }
-              className="text-muted-foreground"
+              className="shrink-0 text-muted-foreground"
               aria-label={`Remove ${ex.name}`}
             >
               <Trash2 size={15} />
             </button>
           </div>
+
 
           <div className="mt-3 space-y-2">
             {ex.sets.map((s, i) => (
