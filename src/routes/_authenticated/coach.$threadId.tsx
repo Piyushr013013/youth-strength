@@ -134,22 +134,23 @@ function ChatWindow({
 
         {messages.map((m) => {
           const text = messageText(m);
-          if (!text) return null;
-          return (
-            <div
-              key={m.id}
-              className={cn("flex", m.role === "user" ? "justify-end" : "justify-start")}
-            >
-              <div
-                className={cn(
-                  "max-w-[85%] whitespace-pre-wrap text-sm leading-relaxed",
-                  m.role === "user"
-                    ? "rounded-2xl bg-primary px-4 py-2.5 font-medium text-primary-foreground"
-                    : "text-foreground",
-                )}
-              >
-                {text}
+          const tools = m.parts.filter((p) => p.type.startsWith("tool-"));
+          if (!text && !tools.length) return null;
+          if (m.role === "user") {
+            return (
+              <div key={m.id} className="flex justify-end">
+                <div className="max-w-[85%] whitespace-pre-wrap rounded-2xl bg-primary px-4 py-2.5 text-sm font-medium leading-relaxed text-primary-foreground">
+                  {text}
+                </div>
               </div>
+            );
+          }
+          return (
+            <div key={m.id} className="space-y-2">
+              {tools.map((p, i) => (
+                <CoachToolCard key={`${m.id}-tool-${i}`} part={p as never} />
+              ))}
+              {text ? <Markdown>{text}</Markdown> : null}
             </div>
           );
         })}
