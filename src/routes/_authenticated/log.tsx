@@ -259,7 +259,10 @@ function LogPage() {
                             },
                       ),
                     }));
-                    if (!s.done) startRest(restDefault);
+                    if (!s.done) {
+                      startRest(restDefault);
+                      checkSetPRs(ex.exerciseId, ex.name, ex.metric, { ...s, done: true });
+                    }
                   }}
                   className={
                     s.done
