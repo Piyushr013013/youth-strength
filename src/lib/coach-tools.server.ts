@@ -1,12 +1,12 @@
 import { tool } from "ai";
 import { z } from "zod";
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { createUserSupabase } from "./supabase-user.server";
 import { EXERCISES, findExercise } from "./exercises";
 import { overloadReport } from "./overload";
 import { epley1RM } from "./fitness";
 import type { SavedWorkout } from "./types";
 
-type Client = SupabaseClient<never, never, never>;
+type Client = ReturnType<typeof createUserSupabase>;
 
 function matchExercise(query: string) {
   const q = query.trim().toLowerCase();
