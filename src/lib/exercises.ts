@@ -1,5 +1,6 @@
 import type { Exercise, ExerciseCategory } from "./types";
 import { EXTRA_EXERCISES } from "./exercises-extended";
+import { MORE_EXERCISES } from "./exercises-more";
 
 const e = (
   id: string,
