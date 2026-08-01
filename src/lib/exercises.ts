@@ -1,5 +1,6 @@
 import type { Exercise, ExerciseCategory } from "./types";
 import { EXTRA_EXERCISES } from "./exercises-extended";
+import { MORE_EXERCISES } from "./exercises-more";
 
 const e = (
   id: string,
@@ -139,7 +140,7 @@ const BASE_EXERCISES: Exercise[] = [
 ];
 
 const seen = new Set<string>();
-export const EXERCISES: Exercise[] = [...BASE_EXERCISES, ...EXTRA_EXERCISES]
+export const EXERCISES: Exercise[] = [...BASE_EXERCISES, ...EXTRA_EXERCISES, ...MORE_EXERCISES]
   .filter((x) => (seen.has(x.id) ? false : (seen.add(x.id), true)))
   .sort((a, b) => a.name.localeCompare(b.name));
 

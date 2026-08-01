@@ -1,11 +1,16 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Check, Plus, Timer, Trash2 } from "lucide-react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMemo, useRef, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { GlassCard } from "@/components/ui-kit";
+import { PRCelebration, type PRPayload } from "@/components/PRCelebration";
 import { makeSet, useActiveWorkout } from "@/lib/active-workout";
 import { formatDuration, formatVolume, workoutSetCount, workoutVolume } from "@/lib/fitness";
-import { insertWorkout } from "@/lib/api";
+import { fetchWorkouts, insertWorkout } from "@/lib/api";
+import { formatLast, lastPerformances } from "@/lib/history";
+import { detectSetPRs, detectVolumePRs, exerciseBests, savePR } from "@/lib/prs";
+import type { WorkoutSet } from "@/lib/types";
 
 export const Route = createFileRoute("/_authenticated/log")({
   head: () => ({
@@ -23,6 +28,44 @@ function LogPage() {
   const { user } = Route.useRouteContext();
   const { workout, elapsed, update, discard, startRest, restDefault } = useActiveWorkout();
   const qc = useQueryClient();
+  const history = useQuery({ queryKey: ["workouts"], queryFn: fetchWorkouts });
+  const [pr, setPr] = useState<PRPayload | null>(null);
+  const prQueue = useRef<PRPayload[]>([]);
+
+  const last = useMemo(() => lastPerformances(history.data ?? []), [history.data]);
+  const bestsRef = useRef<ReturnType<typeof exerciseBests> | null>(null);
+  const bests = useMemo(() => {
+    bestsRef.current = exerciseBests(history.data ?? []);
+    return bestsRef.current;
+  }, [history.data]);
+
+  function queuePR(payload: PRPayload) {
+    if (pr) prQueue.current.push(payload);
+    else setPr(payload);
+  }
+
+  function nextPR() {
+    const upcoming = prQueue.current.shift();
+    setPr(upcoming ?? null);
+  }
+
+  function checkSetPRs(exerciseId: string, name: string, metric: string, set: WorkoutSet) {
+    const best = bests.get(exerciseId);
+    if (!best) return;
+    const hits = detectSetPRs(best, set, metric as never);
+    for (const hit of hits) {
+      queuePR({ id: `${set.id}-${hit.kind}`, exercise: name, detail: hit.label });
+      void savePR(user.id, {
+        exercise_id: exerciseId,
+        exercise_name: name,
+        kind: hit.kind,
+        value: hit.value,
+        weight: set.weight,
+        reps: set.reps,
+      });
+    }
+  }
+
 
   const finish = useMutation({
     mutationFn: async () => {
@@ -38,6 +81,14 @@ function LogPage() {
         notes: null,
         exercises: workout.exercises,
       });
+      for (const hit of detectVolumePRs(bests, workout.exercises)) {
+        await savePR(user.id, {
+          exercise_id: hit.exerciseId,
+          exercise_name: hit.name,
+          kind: "volume",
+          value: hit.volume,
+        });
+      }
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["workouts"] });
@@ -74,6 +125,7 @@ function LogPage() {
 
   return (
     <div className="space-y-4 pb-28">
+      <PRCelebration pr={pr} onDone={nextPR} />
       <GlassCard className="p-5" glow="lime">
         <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
           {workout.name}
@@ -89,18 +141,24 @@ function LogPage() {
       {workout.exercises.map((ex) => (
         <GlassCard key={ex.id} className="p-4">
           <div className="flex items-center justify-between gap-2">
-            <p className="text-sm font-semibold">{ex.name}</p>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold">{ex.name}</p>
+              <p className="text-[11px] text-muted-foreground">
+                Last: {formatLast(last.get(ex.exerciseId))}
+              </p>
+            </div>
             <button
               type="button"
               onClick={() =>
                 update((w) => ({ ...w, exercises: w.exercises.filter((e) => e.id !== ex.id) }))
               }
-              className="text-muted-foreground"
+              className="shrink-0 text-muted-foreground"
               aria-label={`Remove ${ex.name}`}
             >
               <Trash2 size={15} />
             </button>
           </div>
+
 
           <div className="mt-3 space-y-2">
             {ex.sets.map((s, i) => (
@@ -202,7 +260,10 @@ function LogPage() {
                             },
                       ),
                     }));
-                    if (!s.done) startRest(restDefault);
+                    if (!s.done) {
+                      startRest(restDefault);
+                      checkSetPRs(ex.exerciseId, ex.name, ex.metric, { ...s, done: true });
+                    }
                   }}
                   className={
                     s.done

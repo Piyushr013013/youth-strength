@@ -14,6 +14,115 @@ export type Database = {
   }
   public: {
     Tables: {
+      blocked_users: {
+        Row: {
+          blocked_id: string
+          blocker_id: string
+          created_at: string
+          id: string
+        }
+        Insert: {
+          blocked_id: string
+          blocker_id: string
+          created_at?: string
+          id?: string
+        }
+        Update: {
+          blocked_id?: string
+          blocker_id?: string
+          created_at?: string
+          id?: string
+        }
+        Relationships: []
+      }
+      chat_members: {
+        Row: {
+          chat_id: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          chat_id: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          chat_id?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_members_chat_id_fkey"
+            columns: ["chat_id"]
+            isOneToOne: false
+            referencedRelation: "chats"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_texts: {
+        Row: {
+          body: string
+          chat_id: string
+          created_at: string
+          id: string
+          sender_id: string
+        }
+        Insert: {
+          body: string
+          chat_id: string
+          created_at?: string
+          id?: string
+          sender_id: string
+        }
+        Update: {
+          body?: string
+          chat_id?: string
+          created_at?: string
+          id?: string
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_texts_chat_id_fkey"
+            columns: ["chat_id"]
+            isOneToOne: false
+            referencedRelation: "chats"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chats: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          is_group: boolean
+          name: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          is_group?: boolean
+          name?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          is_group?: boolean
+          name?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       coach_messages: {
         Row: {
           created_at: string
@@ -136,6 +245,45 @@ export type Database = {
           requester_id?: string
           status?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      personal_records: {
+        Row: {
+          achieved_at: string
+          created_at: string
+          exercise_id: string
+          exercise_name: string
+          id: string
+          kind: string
+          reps: number | null
+          user_id: string
+          value: number
+          weight: number | null
+        }
+        Insert: {
+          achieved_at?: string
+          created_at?: string
+          exercise_id: string
+          exercise_name: string
+          id?: string
+          kind: string
+          reps?: number | null
+          user_id: string
+          value: number
+          weight?: number | null
+        }
+        Update: {
+          achieved_at?: string
+          created_at?: string
+          exercise_id?: string
+          exercise_name?: string
+          id?: string
+          kind?: string
+          reps?: number | null
+          user_id?: string
+          value?: number
+          weight?: number | null
         }
         Relationships: []
       }
@@ -297,6 +445,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      chat_participants: {
+        Args: { _chat_id: string }
+        Returns: {
+          display_name: string
+          id: string
+        }[]
+      }
       friend_profiles: {
         Args: { ids: string[] }
         Returns: {
@@ -315,6 +470,11 @@ export type Database = {
           total_volume: number
           workout_count: number
         }[]
+      }
+      get_or_create_dm: { Args: { _other: string }; Returns: string }
+      is_chat_member: {
+        Args: { _chat_id: string; _user_id: string }
+        Returns: boolean
       }
       search_athletes: {
         Args: { q: string }
