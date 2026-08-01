@@ -81,6 +81,14 @@ function LogPage() {
         notes: null,
         exercises: workout.exercises,
       });
+      for (const hit of detectVolumePRs(bests, workout.exercises)) {
+        await savePR(user.id, {
+          exercise_id: hit.exerciseId,
+          exercise_name: hit.name,
+          kind: "volume",
+          value: hit.volume,
+        });
+      }
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["workouts"] });
