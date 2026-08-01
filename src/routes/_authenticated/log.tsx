@@ -125,6 +125,7 @@ function LogPage() {
 
   return (
     <div className="space-y-4 pb-28">
+      <PRCelebration pr={pr} onDone={nextPR} />
       <GlassCard className="p-5" glow="lime">
         <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
           {workout.name}
