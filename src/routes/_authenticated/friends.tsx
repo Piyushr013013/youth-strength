@@ -1,7 +1,16 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Search, UserPlus, Check, X, Trophy, Activity } from "lucide-react";
+import {
+  Search,
+  UserPlus,
+  Check,
+  X,
+  Trophy,
+  Activity,
+  MessageSquare,
+  Ban,
+} from "lucide-react";
 import { toast } from "sonner";
 import { GlassCard, SectionTitle, Chip } from "@/components/ui-kit";
 import {
@@ -13,7 +22,9 @@ import {
   searchAthletes,
   sendFriendRequest,
 } from "@/lib/social";
+import { blockAthlete, openDirectChat } from "@/lib/messaging";
 import { formatVolume } from "@/lib/fitness";
+
 
 export const Route = createFileRoute("/_authenticated/friends")({
   head: () => ({
@@ -46,8 +57,24 @@ function ago(iso: string | null) {
 function FriendsPage() {
   const { user } = Route.useRouteContext();
   const qc = useQueryClient();
+  const navigate = useNavigate();
   const [tab, setTab] = useState<"feed" | "requests" | "find">("feed");
   const [query, setQuery] = useState("");
+
+  const dm = useMutation({
+    mutationFn: (id: string) => openDirectChat(id),
+    onSuccess: (chatId) => navigate({ to: "/messages/$chatId", params: { chatId } }),
+    onError: (e: Error) => toast.error(e.message),
+  });
+  const block = useMutation({
+    mutationFn: (id: string) => blockAthlete(user.id, id),
+    onSuccess: () => {
+      toast.success("Blocked — they can't text you");
+      qc.invalidateQueries({ queryKey: ["blocked"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
 
   const friendships = useQuery({ queryKey: ["friendships"], queryFn: fetchFriendships });
   const board = useQuery({
@@ -118,12 +145,21 @@ function FriendsPage() {
 
   return (
     <div className="space-y-5 pb-32">
-      <div>
-        <h1 className="font-display text-3xl font-bold">Friends</h1>
-        <p className="text-xs text-muted-foreground">
-          {accepted.length} connected · see who's training and compare 30-day volume
-        </p>
+      <div className="flex items-start gap-3">
+        <div className="min-w-0 flex-1">
+          <h1 className="font-display text-3xl font-bold">Friends</h1>
+          <p className="text-xs text-muted-foreground">
+            {accepted.length} connected · see who's training and compare 30-day volume
+          </p>
+        </div>
+        <Link
+          to="/messages"
+          className="flex shrink-0 items-center gap-1.5 rounded-xl bg-primary px-3 py-2 text-xs font-bold text-primary-foreground"
+        >
+          <MessageSquare size={14} /> Messages
+        </Link>
       </div>
+
 
       <div className="flex gap-2 overflow-x-auto pb-1">
         <Chip active={tab === "feed"} onClick={() => setTab("feed")}>
@@ -192,18 +228,33 @@ function FriendsPage() {
                   const otherId = f.requester_id === user.id ? f.addressee_id : f.requester_id;
                   const stat = board.data?.find((b) => b.id === otherId);
                   return (
-                    <GlassCard key={f.id} className="flex items-center gap-3 p-4">
-                      <Trophy size={16} className="text-cyan" />
+                    <GlassCard key={f.id} className="flex items-center gap-2.5 p-4">
+                      <Trophy size={16} className="shrink-0 text-cyan" />
                       <p className="min-w-0 flex-1 truncate text-sm font-semibold">
                         {stat?.display_name ?? nameOf(otherId)}
                       </p>
                       <button
+                        onClick={() => dm.mutate(otherId)}
+                        aria-label="Message athlete"
+                        className="flex items-center gap-1 rounded-lg bg-primary px-2.5 py-1.5 text-xs font-bold text-primary-foreground"
+                      >
+                        <MessageSquare size={13} /> Chat
+                      </button>
+                      <button
+                        onClick={() => block.mutate(otherId)}
+                        aria-label="Block athlete"
+                        className="rounded-lg border border-border px-2 py-1.5 text-muted-foreground"
+                      >
+                        <Ban size={13} />
+                      </button>
+                      <button
                         onClick={() => remove.mutate(f.id)}
-                        className="rounded-lg border border-border px-3 py-1.5 text-xs text-muted-foreground"
+                        className="rounded-lg border border-border px-2.5 py-1.5 text-xs text-muted-foreground"
                       >
                         Remove
                       </button>
                     </GlassCard>
+
                   );
                 })}
               </div>
