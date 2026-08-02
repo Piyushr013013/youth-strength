@@ -1,7 +1,16 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Search, UserPlus, Check, X, Trophy, Activity } from "lucide-react";
+import {
+  Search,
+  UserPlus,
+  Check,
+  X,
+  Trophy,
+  Activity,
+  MessageSquare,
+  Ban,
+} from "lucide-react";
 import { toast } from "sonner";
 import { GlassCard, SectionTitle, Chip } from "@/components/ui-kit";
 import {
@@ -13,7 +22,9 @@ import {
   searchAthletes,
   sendFriendRequest,
 } from "@/lib/social";
+import { blockAthlete, openDirectChat } from "@/lib/messaging";
 import { formatVolume } from "@/lib/fitness";
+
 
 export const Route = createFileRoute("/_authenticated/friends")({
   head: () => ({
@@ -118,12 +129,21 @@ function FriendsPage() {
 
   return (
     <div className="space-y-5 pb-32">
-      <div>
-        <h1 className="font-display text-3xl font-bold">Friends</h1>
-        <p className="text-xs text-muted-foreground">
-          {accepted.length} connected · see who's training and compare 30-day volume
-        </p>
+      <div className="flex items-start gap-3">
+        <div className="min-w-0 flex-1">
+          <h1 className="font-display text-3xl font-bold">Friends</h1>
+          <p className="text-xs text-muted-foreground">
+            {accepted.length} connected · see who's training and compare 30-day volume
+          </p>
+        </div>
+        <Link
+          to="/messages"
+          className="flex shrink-0 items-center gap-1.5 rounded-xl bg-primary px-3 py-2 text-xs font-bold text-primary-foreground"
+        >
+          <MessageSquare size={14} /> Messages
+        </Link>
       </div>
+
 
       <div className="flex gap-2 overflow-x-auto pb-1">
         <Chip active={tab === "feed"} onClick={() => setTab("feed")}>
