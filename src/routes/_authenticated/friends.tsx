@@ -57,8 +57,24 @@ function ago(iso: string | null) {
 function FriendsPage() {
   const { user } = Route.useRouteContext();
   const qc = useQueryClient();
+  const navigate = useNavigate();
   const [tab, setTab] = useState<"feed" | "requests" | "find">("feed");
   const [query, setQuery] = useState("");
+
+  const dm = useMutation({
+    mutationFn: (id: string) => openDirectChat(id),
+    onSuccess: (chatId) => navigate({ to: "/messages/$chatId", params: { chatId } }),
+    onError: (e: Error) => toast.error(e.message),
+  });
+  const block = useMutation({
+    mutationFn: (id: string) => blockAthlete(user.id, id),
+    onSuccess: () => {
+      toast.success("Blocked — they can't text you");
+      qc.invalidateQueries({ queryKey: ["blocked"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
 
   const friendships = useQuery({ queryKey: ["friendships"], queryFn: fetchFriendships });
   const board = useQuery({
@@ -212,18 +228,33 @@ function FriendsPage() {
                   const otherId = f.requester_id === user.id ? f.addressee_id : f.requester_id;
                   const stat = board.data?.find((b) => b.id === otherId);
                   return (
-                    <GlassCard key={f.id} className="flex items-center gap-3 p-4">
-                      <Trophy size={16} className="text-cyan" />
+                    <GlassCard key={f.id} className="flex items-center gap-2.5 p-4">
+                      <Trophy size={16} className="shrink-0 text-cyan" />
                       <p className="min-w-0 flex-1 truncate text-sm font-semibold">
                         {stat?.display_name ?? nameOf(otherId)}
                       </p>
                       <button
+                        onClick={() => dm.mutate(otherId)}
+                        aria-label="Message athlete"
+                        className="flex items-center gap-1 rounded-lg bg-primary px-2.5 py-1.5 text-xs font-bold text-primary-foreground"
+                      >
+                        <MessageSquare size={13} /> Chat
+                      </button>
+                      <button
+                        onClick={() => block.mutate(otherId)}
+                        aria-label="Block athlete"
+                        className="rounded-lg border border-border px-2 py-1.5 text-muted-foreground"
+                      >
+                        <Ban size={13} />
+                      </button>
+                      <button
                         onClick={() => remove.mutate(f.id)}
-                        className="rounded-lg border border-border px-3 py-1.5 text-xs text-muted-foreground"
+                        className="rounded-lg border border-border px-2.5 py-1.5 text-xs text-muted-foreground"
                       >
                         Remove
                       </button>
                     </GlassCard>
+
                   );
                 })}
               </div>
