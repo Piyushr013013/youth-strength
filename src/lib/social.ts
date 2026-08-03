@@ -18,6 +18,9 @@ export interface FriendStat {
   id: string;
   display_name: string;
   sport: string | null;
+  school: string | null;
+  club_team: string | null;
+  grad_year: number | null;
   workout_count: number;
   total_volume: number;
   last_workout: string | null;
