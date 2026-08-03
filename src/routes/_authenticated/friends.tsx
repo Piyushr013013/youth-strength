@@ -46,7 +46,7 @@ export const Route = createFileRoute("/_authenticated/friends")({
       },
     ],
   }),
-  component: FriendsPage;
+  component: FriendsPage,
 });
 
 function ago(iso: string | null) {
