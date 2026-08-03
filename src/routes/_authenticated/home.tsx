@@ -138,7 +138,7 @@ function HomePage() {
         {/* Glowing action tiles */}
         <Link to="/form" className="col-span-2">
           <div className="glass glow-flare relative flex items-center gap-3 overflow-hidden rounded-2xl p-4">
-            <span className="absolute -left-6 bottom--6 h-24 w-24 rounded-full bg-flare/20 blur-2xl" />
+            <span className="absolute -left-6 bottom-0 h-24 w-24 rounded-full bg-flare/20 blur-2xl" />
             <span className="relative flex h-11 w-11 items-center justify-center rounded-xl bg-flare/20 text-flare">
               <ScanFace size={20} />
             </span>
