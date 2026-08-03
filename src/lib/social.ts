@@ -18,6 +18,9 @@ export interface FriendStat {
   id: string;
   display_name: string;
   sport: string | null;
+  school: string | null;
+  club_team: string | null;
+  grad_year: number | null;
   workout_count: number;
   total_volume: number;
   last_workout: string | null;
@@ -53,6 +56,9 @@ export async function fetchFriendsLeaderboard(): Promise<FriendStat[]> {
     id: r.id as string,
     display_name: r.display_name as string,
     sport: (r.sport as string) ?? null,
+    school: (r.school as string) ?? null,
+    club_team: (r.club_team as string) ?? null,
+    grad_year: r.grad_year === null || r.grad_year === undefined ? null : Number(r.grad_year),
     workout_count: Number(r.workout_count ?? 0),
     total_volume: Number(r.total_volume ?? 0),
     last_workout: (r.last_workout as string) ?? null,

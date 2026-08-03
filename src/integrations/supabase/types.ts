@@ -290,10 +290,13 @@ export type Database = {
       profiles: {
         Row: {
           body_weight: number | null
+          club_team: string | null
           created_at: string
           display_name: string
+          grad_year: number | null
           id: string
           onboarded: boolean
+          school: string | null
           sport: string | null
           tracks: string[]
           unit: string
@@ -301,10 +304,13 @@ export type Database = {
         }
         Insert: {
           body_weight?: number | null
+          club_team?: string | null
           created_at?: string
           display_name?: string
+          grad_year?: number | null
           id: string
           onboarded?: boolean
+          school?: string | null
           sport?: string | null
           tracks?: string[]
           unit?: string
@@ -312,10 +318,13 @@ export type Database = {
         }
         Update: {
           body_weight?: number | null
+          club_team?: string | null
           created_at?: string
           display_name?: string
+          grad_year?: number | null
           id?: string
           onboarded?: boolean
+          school?: string | null
           sport?: string | null
           tracks?: string[]
           unit?: string
@@ -398,6 +407,38 @@ export type Database = {
         }
         Relationships: []
       }
+      workout_hypes: {
+        Row: {
+          created_at: string
+          emoji: string
+          id: string
+          user_id: string
+          workout_id: string
+        }
+        Insert: {
+          created_at?: string
+          emoji: string
+          id?: string
+          user_id: string
+          workout_id: string
+        }
+        Update: {
+          created_at?: string
+          emoji?: string
+          id?: string
+          user_id?: string
+          workout_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workout_hypes_workout_id_fkey"
+            columns: ["workout_id"]
+            isOneToOne: false
+            referencedRelation: "workouts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       workouts: {
         Row: {
           created_at: string
@@ -452,6 +493,22 @@ export type Database = {
           id: string
         }[]
       }
+      friend_activity_feed: {
+        Args: { limit_count?: number }
+        Returns: {
+          athlete_id: string
+          display_name: string
+          duration_sec: number
+          hypes: Json
+          name: string
+          school: string
+          sport: string
+          started_at: string
+          total_sets: number
+          total_volume: number
+          workout_id: string
+        }[]
+      }
       friend_profiles: {
         Args: { ids: string[] }
         Returns: {
@@ -463,9 +520,12 @@ export type Database = {
       friends_leaderboard: {
         Args: never
         Returns: {
+          club_team: string
           display_name: string
+          grad_year: number
           id: string
           last_workout: string
+          school: string
           sport: string
           total_volume: number
           workout_count: number
