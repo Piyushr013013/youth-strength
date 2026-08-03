@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { motion } from "framer-motion";
 import {
   Search,
   UserPlus,
@@ -10,6 +11,7 @@ import {
   Activity,
   MessageSquare,
   Ban,
+  Zap,
 } from "lucide-react";
 import { toast } from "sonner";
 import { GlassCard, SectionTitle, Chip } from "@/components/ui-kit";
@@ -23,26 +25,28 @@ import {
   sendFriendRequest,
 } from "@/lib/social";
 import { blockAthlete, openDirectChat } from "@/lib/messaging";
-import { formatVolume } from "@/lib/fitness";
-
+import { fetchActivityFeed, HYPE_EMOJIS, toggleHype } from "@/lib/hype";
+import { formatVolume, formatDuration } from "@/lib/fitness";
+import { sportVisual } from "@/lib/sport-visuals";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/friends")({
   head: () => ({
     meta: [
-      { title: "Friends & Leaderboard — ATHLETE OS" },
+      { title: "Teammates, Hype & Leaderboard — ATHLETE OS" },
       {
         name: "description",
         content:
-          "Connect with teammates, see who trained today and compare 30-day volume on the friends leaderboard.",
+          "See teammate sessions in a live activity feed, hype their workouts and filter the leaderboard by school, club team or class year.",
       },
-      { property: "og:title", content: "Friends & Leaderboard — ATHLETE OS" },
+      { property: "og:title", content: "Teammates, Hype & Leaderboard — ATHLETE OS" },
       {
         property: "og:description",
-        content: "Connect with teammates and see who's training right now.",
+        content: "Live teammate activity feed, one-tap hype and class-year leaderboards.",
       },
     ],
   }),
-  component: FriendsPage,
+  component: FriendsPage;
 });
 
 function ago(iso: string | null) {
@@ -54,12 +58,35 @@ function ago(iso: string | null) {
   return `${Math.floor(mins / 1440)}d ago`;
 }
 
+function Avatar({ name, accent = "lime" }: { name: string; accent?: "lime" | "cyan" | "flare" }) {
+  const initials = name
+    .split(/\s+/)
+    .map((w) => w[0])
+    .filter(Boolean)
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+  return (
+    <span
+      className={cn(
+        "font-display flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border text-xs font-black",
+        accent === "lime" && "border-lime/40 bg-lime/10 text-lime",
+        accent === "cyan" && "border-cyan/40 bg-cyan/10 text-cyan",
+        accent === "flare" && "border-flare/40 bg-flare/10 text-flare",
+      )}
+    >
+      {initials || "A"}
+    </span>
+  );
+}
+
 function FriendsPage() {
   const { user } = Route.useRouteContext();
   const qc = useQueryClient();
   const navigate = useNavigate();
-  const [tab, setTab] = useState<"feed" | "requests" | "find">("feed");
+  const [tab, setTab] = useState<"feed" | "board" | "requests" | "find">("feed");
   const [query, setQuery] = useState("");
+  const [filter, setFilter] = useState<string>("all");
 
   const dm = useMutation({
     mutationFn: (id: string) => openDirectChat(id),
@@ -75,12 +102,16 @@ function FriendsPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
-
   const friendships = useQuery({ queryKey: ["friendships"], queryFn: fetchFriendships });
   const board = useQuery({
     queryKey: ["friends-leaderboard"],
     queryFn: fetchFriendsLeaderboard,
     refetchInterval: 60_000,
+  });
+  const feed = useQuery({
+    queryKey: ["activity-feed"],
+    queryFn: fetchActivityFeed,
+    refetchInterval: 45_000,
   });
   const search = useQuery({
     queryKey: ["athlete-search", query],
@@ -88,12 +119,21 @@ function FriendsPage() {
     enabled: query.trim().length >= 2,
   });
 
+  const hype = useMutation({
+    mutationFn: (v: { workoutId: string; emoji: string; active: boolean }) =>
+      toggleHype(user.id, v.workoutId, v.emoji, v.active),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["activity-feed"] }),
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   const incoming = useMemo(
-    () => (friendships.data ?? []).filter((f) => f.status === "pending" && f.addressee_id === user.id),
+    () =>
+      (friendships.data ?? []).filter((f) => f.status === "pending" && f.addressee_id === user.id),
     [friendships.data, user.id],
   );
   const outgoing = useMemo(
-    () => (friendships.data ?? []).filter((f) => f.status === "pending" && f.requester_id === user.id),
+    () =>
+      (friendships.data ?? []).filter((f) => f.status === "pending" && f.requester_id === user.id),
     [friendships.data, user.id],
   );
   const accepted = useMemo(
@@ -102,7 +142,10 @@ function FriendsPage() {
   );
 
   const pendingIds = useMemo(
-    () => [...incoming, ...outgoing].map((f) => (f.requester_id === user.id ? f.addressee_id : f.requester_id)),
+    () =>
+      [...incoming, ...outgoing].map((f) =>
+        f.requester_id === user.id ? f.addressee_id : f.requester_id,
+      ),
     [incoming, outgoing, user.id],
   );
 
@@ -111,8 +154,42 @@ function FriendsPage() {
     queryFn: () => fetchFriendProfiles(pendingIds),
     enabled: pendingIds.length > 0,
   });
-  const nameOf = (id: string) =>
-    names.data?.find((n) => n.id === id)?.display_name ?? "Athlete";
+  const nameOf = (id: string) => names.data?.find((n) => n.id === id)?.display_name ?? "Athlete";
+
+  /** School / club / class-year filter chips built from real teammate data. */
+  const filters = useMemo(() => {
+    const rows = board.data ?? [];
+    const out: { key: string; label: string }[] = [{ key: "all", label: "Everyone" }];
+    const seen = new Set<string>();
+    for (const r of rows) {
+      if (r.school && !seen.has(`school:${r.school}`)) {
+        seen.add(`school:${r.school}`);
+        out.push({ key: `school:${r.school}`, label: r.school });
+      }
+      if (r.club_team && !seen.has(`club:${r.club_team}`)) {
+        seen.add(`club:${r.club_team}`);
+        out.push({ key: `club:${r.club_team}`, label: r.club_team });
+      }
+      if (r.grad_year && !seen.has(`grad:${r.grad_year}`)) {
+        seen.add(`grad:${r.grad_year}`);
+        out.push({ key: `grad:${r.grad_year}`, label: `Class of '${String(r.grad_year).slice(2)}'` });
+      }
+    }
+    return out;
+  }, [board.data]);
+
+  const rankings = useMemo(() => {
+    const rows = board.data ?? [];
+    if (filter === "all") return rows;
+    const [kind, value] = filter.split(":");
+    return rows.filter((r) =>
+      kind === "school"
+        ? r.school === value
+        : kind === "club"
+          ? r.club_team === value
+          : String(r.grad_year) === value,
+    );
+  }, [board.data, filter]);
 
   const invalidate = () => {
     qc.invalidateQueries({ queryKey: ["friendships"] });
@@ -147,23 +224,25 @@ function FriendsPage() {
     <div className="space-y-5 pb-32">
       <div className="flex items-start gap-3">
         <div className="min-w-0 flex-1">
-          <h1 className="font-display text-3xl font-bold">Friends</h1>
+          <h1 className="font-display text-3xl font-bold">Teammates</h1>
           <p className="text-xs text-muted-foreground">
-            {accepted.length} connected · see who's training and compare 30-day volume
+            {accepted.length} connected · hype their sessions, climb the board
           </p>
         </div>
         <Link
           to="/messages"
-          className="flex shrink-0 items-center gap-1.5 rounded-xl bg-primary px-3 py-2 text-xs font-bold text-primary-foreground"
+          className="glow-lime flex shrink-0 items-center gap-1.5 rounded-xl bg-primary px-3 py-2 text-xs font-bold text-primary-foreground"
         >
           <MessageSquare size={14} /> Messages
         </Link>
       </div>
 
-
       <div className="flex gap-2 overflow-x-auto pb-1">
         <Chip active={tab === "feed"} onClick={() => setTab("feed")}>
           Activity
+        </Chip>
+        <Chip active={tab === "board"} onClick={() => setTab("board")}>
+          Leaderboard
         </Chip>
         <Chip active={tab === "requests"} onClick={() => setTab("requests")}>
           Requests{incoming.length ? ` (${incoming.length})` : ""}
@@ -173,26 +252,126 @@ function FriendsPage() {
         </Chip>
       </div>
 
+      {/* ── Activity feed ──────────────────────────────── */}
       {tab === "feed" ? (
+        <section className="space-y-3">
+          {(feed.data ?? []).map((item, i) => {
+            const v = sportVisual(item.sport);
+            const mine = (emoji: string) =>
+              item.hypes.some((h) => h.user_id === user.id && h.emoji === emoji);
+            const countOf = (emoji: string) => item.hypes.filter((h) => h.emoji === emoji).length;
+            return (
+              <motion.div
+                key={item.workout_id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: Math.min(i * 0.04, 0.3) }}
+              >
+                <GlassCard className="p-4">
+                  <div className="flex items-center gap-3">
+                    <Avatar name={item.display_name} accent={v.accent} />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm">
+                        <span className="font-bold">{item.display_name}</span>{" "}
+                        <span className="text-muted-foreground">just logged</span>
+                      </p>
+                      <p className="truncate text-sm font-semibold text-lime">
+                        {v.emoji} {item.name}
+                      </p>
+                    </div>
+                    <span className="shrink-0 text-[11px] text-muted-foreground">
+                      {ago(item.started_at)}
+                    </span>
+                  </div>
+                  <div className="mt-3 flex gap-2 text-[11px] text-muted-foreground">
+                    <span className="rounded-lg bg-surface-2/70 px-2 py-1">
+                      {formatDuration(item.duration_sec)}
+                    </span>
+                    <span className="rounded-lg bg-surface-2/70 px-2 py-1">
+                      {item.total_sets} sets
+                    </span>
+                    <span className="rounded-lg bg-surface-2/70 px-2 py-1 text-lime">
+                      {formatVolume(item.total_volume)}
+                    </span>
+                  </div>
+                  <div className="mt-3 flex items-center gap-2">
+                    {HYPE_EMOJIS.map((e) => {
+                      const active = mine(e);
+                      const count = countOf(e);
+                      return (
+                        <motion.button
+                          key={e}
+                          whileTap={{ scale: 1.35 }}
+                          onClick={() =>
+                            hype.mutate({ workoutId: item.workout_id, emoji: e, active })
+                          }
+                          aria-label={`React ${e}`}
+                          className={cn(
+                            "flex items-center gap-1 rounded-full border px-2.5 py-1 text-sm transition",
+                            active
+                              ? "border-lime/60 bg-lime/15 text-lime"
+                              : "border-border bg-surface-2/60 text-muted-foreground",
+                          )}
+                        >
+                          <span>{e}</span>
+                          {count ? <span className="text-[11px] font-bold">{count}</span> : null}
+                        </motion.button>
+                      );
+                    })}
+                    <button
+                      onClick={() => dm.mutate(item.athlete_id)}
+                      className="ml-auto flex items-center gap-1 rounded-full border border-cyan/40 px-2.5 py-1 text-[11px] font-bold text-cyan"
+                    >
+                      <MessageSquare size={12} /> Text
+                    </button>
+                  </div>
+                </GlassCard>
+              </motion.div>
+            );
+          })}
+          {!feed.data?.length ? (
+            <GlassCard className="p-5 text-sm text-muted-foreground">
+              No teammate sessions yet. Add athletes and their workouts show up here live.
+            </GlassCard>
+          ) : null}
+        </section>
+      ) : null}
+
+      {/* ── Leaderboard ────────────────────────────────── */}
+      {tab === "board" ? (
         <section>
-          <SectionTitle>30-day leaderboard</SectionTitle>
+          <div className="mb-3 flex gap-2 overflow-x-auto pb-1">
+            {filters.map((f) => (
+              <Chip key={f.key} active={filter === f.key} onClick={() => setFilter(f.key)}>
+                {f.label}
+              </Chip>
+            ))}
+          </div>
+          <SectionTitle>30-day volume</SectionTitle>
           <div className="space-y-2">
-            {(board.data ?? []).map((f, i) => {
+            {rankings.map((f, i) => {
               const live = f.last_workout
                 ? Date.now() - new Date(f.last_workout).getTime() < 3 * 60_000
                 : false;
               return (
-                <GlassCard key={f.id} className="flex items-center gap-3 p-4" glow={i === 0 ? "lime" : null}>
-                  <span className="font-display w-6 text-center text-sm font-bold text-muted-foreground">
+                <GlassCard
+                  key={f.id}
+                  className="flex items-center gap-3 p-4"
+                  glow={i === 0 ? "lime" : null}
+                >
+                  <span className="font-display w-5 text-center text-sm font-black text-muted-foreground">
                     {i + 1}
                   </span>
+                  <Avatar name={f.display_name} accent={sportVisual(f.sport).accent} />
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-semibold">
                       {f.display_name}
                       {f.id === user.id ? " (you)" : ""}
                     </p>
                     <p className="truncate text-xs text-muted-foreground">
-                      {f.sport ?? "Athlete"} · {f.workout_count} sessions
+                      {f.school ?? f.club_team ?? f.sport ?? "Athlete"}
+                      {f.grad_year ? ` · '${String(f.grad_year).slice(2)}` : ""} ·{" "}
+                      {f.workout_count} sessions
                     </p>
                   </div>
                   <div className="text-right">
@@ -202,7 +381,7 @@ function FriendsPage() {
                     <p
                       className={
                         live
-                          ? "flex items-center gap-1 text-[11px] font-semibold text-flare"
+                          ? "flex items-center justify-end gap-1 text-[11px] font-semibold text-flare"
                           : "text-[11px] text-muted-foreground"
                       }
                     >
@@ -213,9 +392,9 @@ function FriendsPage() {
                 </GlassCard>
               );
             })}
-            {!board.data?.length ? (
+            {!rankings.length ? (
               <GlassCard className="p-5 text-sm text-muted-foreground">
-                Add teammates to see their sessions here.
+                Nobody in this group yet.
               </GlassCard>
             ) : null}
           </div>
@@ -254,7 +433,6 @@ function FriendsPage() {
                         Remove
                       </button>
                     </GlassCard>
-
                   );
                 })}
               </div>
@@ -270,17 +448,20 @@ function FriendsPage() {
             <div className="space-y-2">
               {incoming.map((f) => (
                 <GlassCard key={f.id} className="flex items-center gap-3 p-4">
+                  <Avatar name={nameOf(f.requester_id)} accent="cyan" />
                   <p className="min-w-0 flex-1 truncate text-sm font-semibold">
                     {nameOf(f.requester_id)}
                   </p>
                   <button
                     onClick={() => respond.mutate({ id: f.id, status: "accepted" })}
+                    aria-label="Accept request"
                     className="rounded-lg bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground"
                   >
                     <Check size={14} />
                   </button>
                   <button
                     onClick={() => respond.mutate({ id: f.id, status: "declined" })}
+                    aria-label="Decline request"
                     className="rounded-lg border border-border px-3 py-1.5 text-xs text-muted-foreground"
                   >
                     <X size={14} />
@@ -304,9 +485,7 @@ function FriendsPage() {
                 </GlassCard>
               ))}
               {!outgoing.length ? (
-                <GlassCard className="p-5 text-sm text-muted-foreground">
-                  Nothing pending.
-                </GlassCard>
+                <GlassCard className="p-5 text-sm text-muted-foreground">Nothing pending.</GlassCard>
               ) : null}
             </div>
           </div>
@@ -333,6 +512,7 @@ function FriendsPage() {
           <div className="space-y-2">
             {(search.data ?? []).map((a) => (
               <GlassCard key={a.id} className="flex items-center gap-3 p-4">
+                <Avatar name={a.display_name} accent={sportVisual(a.sport).accent} />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-semibold">{a.display_name}</p>
                   <p className="truncate text-xs text-muted-foreground">{a.sport ?? "Athlete"}</p>
@@ -357,6 +537,10 @@ function FriendsPage() {
           </div>
         </section>
       ) : null}
+
+      <p className="flex items-center justify-center gap-1.5 pt-2 text-[11px] text-muted-foreground">
+        <Zap size={12} className="text-lime" /> Hype updates every 45 seconds
+      </p>
     </div>
   );
 }
