@@ -69,6 +69,17 @@ export function PRCelebration({
               </p>
               <p className="mt-1 text-sm font-semibold">{pr.exercise}</p>
               <p className="mt-0.5 text-xs text-muted-foreground">{pr.detail}</p>
+              {onShare ? (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onShare(pr);
+                  }}
+                  className="mt-4 inline-flex items-center gap-2 rounded-2xl border border-cyan/50 bg-surface-2/70 px-5 py-2.5 text-xs font-black uppercase tracking-[0.14em] text-cyan"
+                >
+                  <Share2 size={14} /> Make PR card
+                </button>
+              ) : null}
             </motion.div>
           </div>
         </motion.div>
