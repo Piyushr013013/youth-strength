@@ -21,11 +21,43 @@ export const Route = createFileRoute("/_authenticated/coach/")({
   component: CoachIndex,
 });
 
-const STARTERS = [
-  "Build me a 4-day in-season plan for football",
-  "How do I add 3 inches to my vertical?",
-  "My knees hurt after squats — what should I change?",
-  "What should I eat before a 7am game?",
+const STARTERS: { emoji: string; label: string; prompt: string; accent: string }[] = [
+  {
+    emoji: "🏈",
+    label: "In-season plan",
+    prompt: "Build me a 4-day in-season plan for football",
+    accent: "border-lime/40 text-lime",
+  },
+  {
+    emoji: "🏀",
+    label: "Jump higher",
+    prompt: "How do I add 3 inches to my vertical?",
+    accent: "border-flare/40 text-flare",
+  },
+  {
+    emoji: "🩹",
+    label: "Fix knee pain",
+    prompt: "My knees hurt after squats — what should I change?",
+    accent: "border-cyan/40 text-cyan",
+  },
+  {
+    emoji: "🍎",
+    label: "Game-day fuel",
+    prompt: "What should I eat before a 7am game?",
+    accent: "border-lime/40 text-lime",
+  },
+  {
+    emoji: "📈",
+    label: "Call out my stalls",
+    prompt: "Audit my last few weeks and call me out if I'm not progressively overloading",
+    accent: "border-flare/40 text-flare",
+  },
+  {
+    emoji: "🗓️",
+    label: "Build my routine",
+    prompt: "Create a custom 3-day hypertrophy routine in my app",
+    accent: "border-cyan/40 text-cyan",
+  },
 ];
 
 function CoachIndex() {
