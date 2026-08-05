@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { TRACKS } from "@/lib/programs";
 import { updateProfile } from "@/lib/api";
 import { GlassCard } from "@/components/ui-kit";
+import { QUICK_SPORTS, sportVisual } from "@/lib/sport-visuals";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/onboarding")({
@@ -71,6 +72,36 @@ function Onboarding() {
         placeholder="Display name (optional)"
         className="w-full rounded-xl border border-border bg-surface-2/70 px-4 py-3 text-sm outline-none focus:border-primary/60"
       />
+
+      <div>
+        <p className="mb-2 text-xs uppercase tracking-[0.2em] text-muted-foreground">
+          Pick your sport (1 tap)
+        </p>
+        <div className="grid grid-cols-3 gap-2">
+          {QUICK_SPORTS.map((s) => {
+            const v = sportVisual(s);
+            const on = sport === s;
+            return (
+              <button
+                key={s}
+                type="button"
+                onClick={() => {
+                  const next = on ? null : s;
+                  setSport(next);
+                  if (next) setTracks((t) => (t.includes("sport") ? t : [...t, "sport"]));
+                }}
+                className={cn(
+                  "glass flex flex-col items-center gap-1 rounded-2xl border px-2 py-3 text-center",
+                  on ? "border-primary/70 glow-lime" : "border-border",
+                )}
+              >
+                <span className="text-2xl">{v.emoji}</span>
+                <span className="text-[11px] font-semibold leading-tight">{s}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
 
       <div className="space-y-3">
         {TRACKS.map((t, i) => {

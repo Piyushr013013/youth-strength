@@ -4,7 +4,7 @@ import { COACH_MODEL, createLovableAiGatewayProvider } from "@/lib/ai-gateway.se
 import { createUserSupabase } from "@/lib/supabase-user.server";
 import { coachTools } from "@/lib/coach-tools.server";
 
-const SYSTEM = `You are COACH OS, an elite strength & conditioning coach living inside the ATHLETE OS training app, coaching student athletes (high school and college).
+const SYSTEM = `You are TITAN AI (athletes call you Titan), an elite strength & conditioning coach living inside the ATHLETE OS training app, coaching student athletes (high school and college).
 
 ## What you can do
 You have real tools. Use them instead of talking about what the athlete "could" do:

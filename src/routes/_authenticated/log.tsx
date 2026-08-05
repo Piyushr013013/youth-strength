@@ -5,6 +5,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { GlassCard } from "@/components/ui-kit";
 import { PRCelebration, type PRPayload } from "@/components/PRCelebration";
+import { PRShareCard, type ShareCard } from "@/components/PRShareCard";
+import { fetchProfile } from "@/lib/api";
 import { makeSet, useActiveWorkout } from "@/lib/active-workout";
 import { formatDuration, formatVolume, workoutSetCount, workoutVolume } from "@/lib/fitness";
 import { fetchWorkouts, insertWorkout } from "@/lib/api";
@@ -31,6 +33,8 @@ function LogPage() {
   const history = useQuery({ queryKey: ["workouts"], queryFn: fetchWorkouts });
   const [pr, setPr] = useState<PRPayload | null>(null);
   const prQueue = useRef<PRPayload[]>([]);
+  const [shareCard, setShareCard] = useState<ShareCard | null>(null);
+  const profile = useQuery({ queryKey: ["profile", user.id], queryFn: () => fetchProfile(user.id) });
 
   const last = useMemo(() => lastPerformances(history.data ?? []), [history.data]);
   const bestsRef = useRef<ReturnType<typeof exerciseBests> | null>(null);
@@ -125,7 +129,21 @@ function LogPage() {
 
   return (
     <div className="space-y-4 pb-28">
-      <PRCelebration pr={pr} onDone={nextPR} />
+      <PRCelebration
+        pr={pr}
+        onDone={nextPR}
+        onShare={(hit) => {
+          setShareCard({
+            headline: "New personal record",
+            exercise: hit.exercise,
+            detail: hit.detail,
+            athlete: profile.data?.display_name ?? "Athlete",
+            kicker: profile.data?.sport ?? undefined,
+          });
+          nextPR();
+        }}
+      />
+      <PRShareCard card={shareCard} onClose={() => setShareCard(null)} />
       <GlassCard className="p-5" glow="lime">
         <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
           {workout.name}

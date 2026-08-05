@@ -21,11 +21,43 @@ export const Route = createFileRoute("/_authenticated/coach/")({
   component: CoachIndex,
 });
 
-const STARTERS = [
-  "Build me a 4-day in-season plan for football",
-  "How do I add 3 inches to my vertical?",
-  "My knees hurt after squats — what should I change?",
-  "What should I eat before a 7am game?",
+const STARTERS: { emoji: string; label: string; prompt: string; accent: string }[] = [
+  {
+    emoji: "🏈",
+    label: "In-season plan",
+    prompt: "Build me a 4-day in-season plan for football",
+    accent: "border-lime/40 text-lime",
+  },
+  {
+    emoji: "🏀",
+    label: "Jump higher",
+    prompt: "How do I add 3 inches to my vertical?",
+    accent: "border-flare/40 text-flare",
+  },
+  {
+    emoji: "🩹",
+    label: "Fix knee pain",
+    prompt: "My knees hurt after squats — what should I change?",
+    accent: "border-cyan/40 text-cyan",
+  },
+  {
+    emoji: "🍎",
+    label: "Game-day fuel",
+    prompt: "What should I eat before a 7am game?",
+    accent: "border-lime/40 text-lime",
+  },
+  {
+    emoji: "📈",
+    label: "Call out my stalls",
+    prompt: "Audit my last few weeks and call me out if I'm not progressively overloading",
+    accent: "border-flare/40 text-flare",
+  },
+  {
+    emoji: "🗓️",
+    label: "Build my routine",
+    prompt: "Create a custom 3-day hypertrophy routine in my app",
+    accent: "border-cyan/40 text-cyan",
+  },
 ];
 
 function CoachIndex() {
@@ -55,12 +87,20 @@ function CoachIndex() {
 
   return (
     <div className="space-y-5 pb-32">
-      <div className="flex items-center gap-3">
-        <img src={coachMark} alt="" className="h-11 w-11 rounded-xl" />
-        <div>
-          <h1 className="font-display text-3xl font-bold">Coach</h1>
-          <p className="text-xs text-muted-foreground">
-            Ask anything about training, recovery or your sport.
+      <div className="glass glow-lime flex items-center gap-3 rounded-2xl p-4">
+        <span className="relative">
+          <img src={coachMark} alt="Titan AI coach badge" className="h-14 w-14 rounded-2xl" />
+          <span className="absolute -bottom-1 -right-1 rounded-full border border-background bg-primary px-1.5 py-0.5 text-[9px] font-black uppercase text-primary-foreground">
+            AI
+          </span>
+        </span>
+        <div className="min-w-0">
+          <h1 className="font-display text-2xl font-bold text-gradient-neon">TITAN AI</h1>
+          <p className="text-[11px] uppercase tracking-[0.16em] text-cyan">
+            Your strength & conditioning coach
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Ask anything — programming, recovery, nutrition or your sport.
           </p>
         </div>
       </div>
@@ -73,14 +113,18 @@ function CoachIndex() {
         <Plus size={20} /> New chat
       </button>
 
-      <div className="grid gap-2">
+      <div className="grid grid-cols-2 gap-2">
         {STARTERS.map((s) => (
           <button
-            key={s}
-            onClick={() => create.mutate(s)}
-            className="rounded-xl border border-border bg-surface-2/50 px-4 py-3 text-left text-sm text-muted-foreground hover:text-foreground"
+            key={s.label}
+            onClick={() => create.mutate(s.prompt)}
+            className={`glass rounded-2xl border ${s.accent} p-3 text-left`}
           >
-            {s}
+            <span className="text-xl">{s.emoji}</span>
+            <span className="mt-1.5 block text-sm font-bold text-foreground">{s.label}</span>
+            <span className="mt-0.5 block text-[11px] leading-snug text-muted-foreground">
+              {s.prompt}
+            </span>
           </button>
         ))}
       </div>

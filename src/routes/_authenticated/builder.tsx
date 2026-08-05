@@ -11,7 +11,7 @@ import { useActiveWorkout } from "@/lib/active-workout";
 import type { RoutineExercise } from "@/lib/types";
 
 export const Route = createFileRoute("/_authenticated/builder")({
-  validateSearch: (search: Record<string, unknown>) => ({
+  validateSearch: (search: Record<string, unknown>): { id?: string } => ({
     id: typeof search.id === "string" ? search.id : undefined,
   }),
   head: () => ({

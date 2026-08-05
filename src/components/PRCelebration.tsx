@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { Trophy } from "lucide-react";
+import { Share2, Trophy } from "lucide-react";
 import { useEffect } from "react";
 
 export interface PRPayload {
@@ -10,7 +10,15 @@ export interface PRPayload {
 
 const PARTICLES = Array.from({ length: 22 }, (_, i) => i);
 
-export function PRCelebration({ pr, onDone }: { pr: PRPayload | null; onDone: () => void }) {
+export function PRCelebration({
+  pr,
+  onDone,
+  onShare,
+}: {
+  pr: PRPayload | null;
+  onDone: () => void;
+  onShare?: (pr: PRPayload) => void;
+}) {
   useEffect(() => {
     if (!pr) return;
     const t = setTimeout(onDone, 3200);
@@ -61,6 +69,17 @@ export function PRCelebration({ pr, onDone }: { pr: PRPayload | null; onDone: ()
               </p>
               <p className="mt-1 text-sm font-semibold">{pr.exercise}</p>
               <p className="mt-0.5 text-xs text-muted-foreground">{pr.detail}</p>
+              {onShare ? (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onShare(pr);
+                  }}
+                  className="mt-4 inline-flex items-center gap-2 rounded-2xl border border-cyan/50 bg-surface-2/70 px-5 py-2.5 text-xs font-black uppercase tracking-[0.14em] text-cyan"
+                >
+                  <Share2 size={14} /> Make PR card
+                </button>
+              ) : null}
             </motion.div>
           </div>
         </motion.div>

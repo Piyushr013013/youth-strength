@@ -12,7 +12,7 @@ import { Markdown } from "@/components/Markdown";
 import { CoachToolCard } from "@/components/CoachToolCard";
 
 export const Route = createFileRoute("/_authenticated/coach/$threadId")({
-  validateSearch: (search: Record<string, unknown>) => ({
+  validateSearch: (search: Record<string, unknown>): { q?: string } => ({
     q: typeof search.q === "string" ? search.q : undefined,
   }),
   head: () => ({
