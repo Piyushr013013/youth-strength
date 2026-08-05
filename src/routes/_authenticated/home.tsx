@@ -12,6 +12,8 @@ import { levelFromXp } from "@/lib/history";
 import { levelTitle, trainingXp } from "@/lib/levels";
 import { sportVisual } from "@/lib/sport-visuals";
 import { PROGRAMS } from "@/lib/programs";
+import { AnimatedBolt, AnimatedFire, TagChip } from "@/components/hype-bits";
+import { programBadges } from "@/lib/program-badges";
 
 export const Route = createFileRoute("/_authenticated/home")({
   head: () => ({
@@ -87,7 +89,7 @@ function HomePage() {
           className="col-span-2"
         >
           <Link to="/log" className="block">
-            <div className="glass glow-lime pulse-ring relative flex items-center gap-4 overflow-hidden rounded-2xl p-5">
+            <div className="glass glow-lime pulse-ring cta-glass relative flex items-center gap-4 overflow-hidden rounded-2xl p-5">
               <span className="absolute -right-8 -top-10 h-32 w-32 rounded-full bg-primary/20 blur-2xl" />
               <span className="relative flex h-14 w-14 items-center justify-center rounded-2xl bg-primary text-primary-foreground">
                 <Play size={26} />
@@ -112,7 +114,13 @@ function HomePage() {
 
         {/* Weekly ring */}
         <GlassCard className="flex flex-col items-center justify-center p-4">
-          <ProgressRing value={thisWeek} goal={4} accent="cyan" label={`${thisWeek}/4`} caption="This week" />
+          <ProgressRing
+            value={thisWeek}
+            goal={4}
+            accent="cyan"
+            label={`${thisWeek}/4`}
+            caption={`${thisWeek} of 4 workouts done`}
+          />
         </GlassCard>
 
         {/* Level ring + tonnage */}
@@ -128,10 +136,15 @@ function HomePage() {
               </p>
             </div>
           </GlassCard>
-          <GlassCard className="p-4">
-            <p className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">Tonnage</p>
-            <p className="font-display text-xl font-black text-lime">{formatVolume(tonnage)}</p>
-            <p className="text-[10px] text-muted-foreground">{list.length} sessions</p>
+          <GlassCard className="flex items-center gap-3 p-4">
+            <AnimatedBolt size={30} />
+            <div className="min-w-0">
+              <p className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
+                Tonnage
+              </p>
+              <p className="font-display text-xl font-black text-lime">{formatVolume(tonnage)}</p>
+              <p className="text-[10px] text-muted-foreground">{list.length} sessions</p>
+            </div>
           </GlassCard>
         </div>
 
@@ -231,9 +244,11 @@ function HomePage() {
                     <span className="text-2xl">{v.emoji}</span>
                     <p className="font-display mt-2 text-sm font-bold">{p.name}</p>
                     <p className="mt-1 text-xs text-muted-foreground">{p.tagline}</p>
-                    <p className="mt-3 text-[11px] uppercase tracking-wider text-cyan">
-                      {p.weeks} weeks · {p.daysPerWeek}x/wk
-                    </p>
+                    <div className="mt-3 flex flex-wrap gap-1">
+                      {programBadges(p).slice(0, 3).map((b) => (
+                        <TagChip key={b.label} badge={b} />
+                      ))}
+                    </div>
                   </GlassCard>
                 </Link>
               );
@@ -255,7 +270,7 @@ function HomePage() {
         <div className="space-y-2">
           {list.slice(0, 5).map((w) => (
             <GlassCard key={w.id} className="flex items-center gap-3 p-4">
-              <span className="text-lg">🔥</span>
+              <AnimatedFire size={20} />
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-semibold">{w.name}</p>
                 <p className="text-xs text-muted-foreground">

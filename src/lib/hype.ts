@@ -1,6 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 
-export const HYPE_EMOJIS = ["🔥", "💪", "👏", "🫡"] as const;
+export const HYPE_EMOJIS = ["🔥", "💪", "🙌", "🫡"] as const;
 
 export interface FeedHype {
   emoji: string;

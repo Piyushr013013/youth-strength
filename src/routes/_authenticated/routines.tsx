@@ -8,6 +8,9 @@ import { scheduleProgram } from "@/lib/schedule";
 import { PROGRAMS, programGroups, type Program, type ProgramDay } from "@/lib/programs";
 import { GlassCard, SectionTitle, Chip } from "@/components/ui-kit";
 import { useActiveWorkout } from "@/lib/active-workout";
+import { sportVisual } from "@/lib/sport-visuals";
+import { programBadges } from "@/lib/program-badges";
+import { TagChip } from "@/components/hype-bits";
 
 export const Route = createFileRoute("/_authenticated/routines")({
   head: () => ({
@@ -109,24 +112,45 @@ function RoutinesPage() {
       <section>
         <SectionTitle>{group ?? "All programs"}</SectionTitle>
         <div className="space-y-2">
-          {list.map((p) => (
-            <GlassCard key={p.id} className="p-4" glow={p.accent}>
-              <button
-                type="button"
-                onClick={() => setOpen(p)}
-                className="flex w-full items-center gap-3 text-left"
-              >
-                <span className="min-w-0 flex-1">
-                  <span className="font-display block text-sm font-bold">{p.name}</span>
-                  <span className="mt-1 block text-xs text-muted-foreground">{p.tagline}</span>
-                  <span className="mt-2 block text-[11px] uppercase tracking-wider text-cyan">
-                    {p.group} · {p.weeks} weeks · {p.daysPerWeek}x/wk · {p.level}
+          {list.map((p) => {
+            const v = sportVisual(p.group);
+            return (
+              <GlassCard key={p.id} className="cta-glass overflow-hidden p-4" glow={p.accent}>
+                <button
+                  type="button"
+                  onClick={() => setOpen(p)}
+                  className="flex w-full items-start gap-3 text-left"
+                >
+                  <span
+                    className={`relative flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl border text-2xl ${
+                      v.accent === "lime"
+                        ? "border-lime/40 bg-lime/10"
+                        : v.accent === "cyan"
+                          ? "border-cyan/40 bg-cyan/10"
+                          : "border-flare/40 bg-flare/10"
+                    }`}
+                  >
+                    <span className="absolute -bottom-3 -right-2 text-5xl opacity-20" aria-hidden>
+                      {v.emoji}
+                    </span>
+                    <span className="relative" aria-hidden>
+                      {v.emoji}
+                    </span>
                   </span>
-                </span>
-                <ChevronRight size={18} className="shrink-0 text-muted-foreground" />
-              </button>
-            </GlassCard>
-          ))}
+                  <span className="min-w-0 flex-1">
+                    <span className="font-display block text-sm font-bold">{p.name}</span>
+                    <span className="mt-1 block text-xs text-muted-foreground">{p.tagline}</span>
+                    <span className="mt-2 flex flex-wrap gap-1">
+                      {programBadges(p).map((b) => (
+                        <TagChip key={b.label} badge={b} />
+                      ))}
+                    </span>
+                  </span>
+                  <ChevronRight size={18} className="mt-1 shrink-0 text-muted-foreground" />
+                </button>
+              </GlassCard>
+            );
+          })}
           {!list.length ? (
             <GlassCard className="p-5 text-sm text-muted-foreground">
               No programs match that search.

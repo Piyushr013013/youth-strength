@@ -30,14 +30,14 @@ const STARTERS: { emoji: string; label: string; prompt: string; accent: string }
   },
   {
     emoji: "🏀",
-    label: "Jump higher",
+    label: "Vertical jump drills",
     prompt: "How do I add 3 inches to my vertical?",
     accent: "border-flare/40 text-flare",
   },
   {
-    emoji: "🩹",
-    label: "Fix knee pain",
-    prompt: "My knees hurt after squats — what should I change?",
+    emoji: "⚽",
+    label: "In-season soccer recovery",
+    prompt: "Give me an in-season soccer recovery day between matches",
     accent: "border-cyan/40 text-cyan",
   },
   {
@@ -108,7 +108,7 @@ function CoachIndex() {
       <button
         onClick={() => create.mutate(undefined)}
         disabled={create.isPending}
-        className="glow-lime flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-4 text-base font-black uppercase tracking-[0.14em] text-primary-foreground disabled:opacity-60"
+        className="glow-lime cta-glass flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-4 text-base font-black uppercase tracking-[0.14em] text-primary-foreground disabled:opacity-60"
       >
         <Plus size={20} /> New chat
       </button>
@@ -118,7 +118,7 @@ function CoachIndex() {
           <button
             key={s.label}
             onClick={() => create.mutate(s.prompt)}
-            className={`glass rounded-2xl border ${s.accent} p-3 text-left`}
+            className={`glass cta-glass rounded-2xl border ${s.accent} p-3 text-left`}
           >
             <span className="text-xl">{s.emoji}</span>
             <span className="mt-1.5 block text-sm font-bold text-foreground">{s.label}</span>
