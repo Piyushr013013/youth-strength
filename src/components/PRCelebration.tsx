@@ -10,7 +10,15 @@ export interface PRPayload {
 
 const PARTICLES = Array.from({ length: 22 }, (_, i) => i);
 
-export function PRCelebration({ pr, onDone }: { pr: PRPayload | null; onDone: () => void }) {
+export function PRCelebration({
+  pr,
+  onDone,
+  onShare,
+}: {
+  pr: PRPayload | null;
+  onDone: () => void;
+  onShare?: (pr: PRPayload) => void;
+}) {
   useEffect(() => {
     if (!pr) return;
     const t = setTimeout(onDone, 3200);
