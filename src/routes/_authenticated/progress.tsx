@@ -10,8 +10,10 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { Flame, Trophy } from "lucide-react";
-import { fetchWorkouts } from "@/lib/api";
+import { Flame, Share2, Trophy } from "lucide-react";
+import { fetchProfile, fetchWorkouts } from "@/lib/api";
+import { PRShareCard, type ShareCard } from "@/components/PRShareCard";
+import { levelTitle } from "@/lib/levels";
 import { GlassCard, SectionTitle, StatTile, Chip } from "@/components/ui-kit";
 import {
   bestE1RMs,
@@ -40,7 +42,10 @@ export const Route = createFileRoute("/_authenticated/progress")({
 });
 
 function ProgressPage() {
+  const { user } = Route.useRouteContext();
   const workouts = useQuery({ queryKey: ["workouts"], queryFn: fetchWorkouts });
+  const profile = useQuery({ queryKey: ["profile", user.id], queryFn: () => fetchProfile(user.id) });
+  const [shareCard, setShareCard] = useState<ShareCard | null>(null);
   const list = workouts.data ?? [];
   const [selected, setSelected] = useState<string | null>(null);
 
@@ -67,6 +72,7 @@ function ProgressPage() {
 
   return (
     <div className="space-y-5 pb-32">
+      <PRShareCard card={shareCard} onClose={() => setShareCard(null)} />
       <div>
         <h1 className="font-display text-3xl font-bold">Progress</h1>
         <p className="text-xs text-muted-foreground">Strength curves, PRs and unlocks.</p>
@@ -79,6 +85,9 @@ function ProgressPage() {
               Athlete level
             </p>
             <p className="font-display text-4xl font-bold text-lime">{level}</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-cyan">
+              {levelTitle(level)}
+            </p>
           </div>
           <p className="text-xs text-muted-foreground">
             {xp} / {ceil} XP
@@ -168,8 +177,23 @@ function ProgressPage() {
                 <Trophy size={14} className="shrink-0 text-lime" />
                 <span className="truncate text-sm">{p.name}</span>
               </span>
-              <span className="font-display shrink-0 text-sm font-bold text-lime">
-                {p.value} e1RM
+              <span className="flex shrink-0 items-center gap-2">
+                <span className="font-display text-sm font-bold text-lime">{p.value} e1RM</span>
+                <button
+                  aria-label={`Share ${p.name} record`}
+                  onClick={() =>
+                    setShareCard({
+                      headline: "Personal record",
+                      exercise: p.name,
+                      detail: `${p.value} lb est. 1RM`,
+                      athlete: profile.data?.display_name ?? "Athlete",
+                      kicker: profile.data?.sport ?? undefined,
+                    })
+                  }
+                  className="rounded-lg border border-cyan/40 bg-surface-2/60 p-1.5 text-cyan"
+                >
+                  <Share2 size={13} />
+                </button>
               </span>
             </GlassCard>
           ))}
