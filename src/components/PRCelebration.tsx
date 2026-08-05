@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { Trophy } from "lucide-react";
+import { Share2, Trophy } from "lucide-react";
 import { useEffect } from "react";
 
 export interface PRPayload {
