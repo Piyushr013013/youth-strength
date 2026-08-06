@@ -4,6 +4,8 @@ export interface AthleteResult {
   id: string;
   display_name: string;
   sport: string | null;
+  school?: string | null;
+  club_team?: string | null;
 }
 
 export interface Friendship {
@@ -24,13 +26,21 @@ export interface FriendStat {
   workout_count: number;
   total_volume: number;
   last_workout: string | null;
+  weekly_sessions: number;
+  streak_days: number;
 }
 
 export async function searchAthletes(q: string): Promise<AthleteResult[]> {
   if (q.trim().length < 2) return [];
   const { data, error } = await supabase.rpc("search_athletes", { q });
   if (error) throw error;
-  return (data ?? []) as AthleteResult[];
+  return ((data ?? []) as Record<string, unknown>[]).map((r) => ({
+    id: r.id as string,
+    display_name: (r.display_name as string) ?? "Athlete",
+    sport: (r.sport as string) ?? null,
+    school: (r.school as string) ?? null,
+    club_team: (r.club_team as string) ?? null,
+  }));
 }
 
 export async function fetchFriendships(): Promise<Friendship[]> {
@@ -62,6 +72,8 @@ export async function fetchFriendsLeaderboard(): Promise<FriendStat[]> {
     workout_count: Number(r.workout_count ?? 0),
     total_volume: Number(r.total_volume ?? 0),
     last_workout: (r.last_workout as string) ?? null,
+    weekly_sessions: Number(r.weekly_sessions ?? 0),
+    streak_days: Number(r.streak_days ?? 0),
   }));
 }
 
