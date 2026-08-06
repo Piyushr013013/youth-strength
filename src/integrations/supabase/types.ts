@@ -527,7 +527,9 @@ export type Database = {
           last_workout: string
           school: string
           sport: string
+          streak_days: number
           total_volume: number
+          weekly_sessions: number
           workout_count: number
         }[]
       }
@@ -539,8 +541,10 @@ export type Database = {
       search_athletes: {
         Args: { q: string }
         Returns: {
+          club_team: string
           display_name: string
           id: string
+          school: string
           sport: string
         }[]
       }
