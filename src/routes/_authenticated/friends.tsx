@@ -279,10 +279,22 @@ function FriendsPage() {
               >
                 <GlassCard className="p-4">
                   <div className="flex items-center gap-3">
-                    <Avatar name={item.display_name} accent={v.accent} />
+                    <Link
+                      to="/teammate/$athleteId"
+                      params={{ athleteId: item.athlete_id }}
+                      className="shrink-0"
+                    >
+                      <Avatar name={item.display_name} accent={v.accent} />
+                    </Link>
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm">
-                        <span className="font-bold">{item.display_name}</span>{" "}
+                        <Link
+                          to="/teammate/$athleteId"
+                          params={{ athleteId: item.athlete_id }}
+                          className="font-bold underline-offset-2 hover:underline"
+                        >
+                          {item.display_name}
+                        </Link>{" "}
                         <span className="text-muted-foreground">just logged</span>
                       </p>
                       <p className="truncate text-sm font-semibold text-lime">
