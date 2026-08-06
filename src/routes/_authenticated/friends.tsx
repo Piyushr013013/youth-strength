@@ -264,6 +264,7 @@ function FriendsPage() {
       {/* ── Activity feed ──────────────────────────────── */}
       {tab === "feed" ? (
         <section className="space-y-3">
+          <SectionTitle>Athlete feed</SectionTitle>
           {(feed.data ?? []).map((item, i) => {
             const v = sportVisual(item.sport);
             const mine = (emoji: string) =>
