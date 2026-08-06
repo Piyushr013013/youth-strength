@@ -2,11 +2,21 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
-import { ChevronRight, Dumbbell, Play, ScanFace, Sparkles, TrendingUp, Users } from "lucide-react";
+import {
+  ChevronRight,
+  Dumbbell,
+  Play,
+  ScanFace,
+  Sparkles,
+  TrendingUp,
+  Trophy,
+  Users,
+} from "lucide-react";
 import { fetchProfile, fetchRoutines, fetchWorkouts } from "@/lib/api";
+import { fetchScheduled, isoDay } from "@/lib/schedule";
+import { fetchPRs } from "@/lib/prs";
 import { computeStreak, formatDuration, formatVolume } from "@/lib/fitness";
 import { GlassCard, SectionTitle } from "@/components/ui-kit";
-import { StreakBanner } from "@/components/StreakFlame";
 import { ProgressRing } from "@/components/ProgressRing";
 import { levelFromXp } from "@/lib/history";
 import { levelTitle, trainingXp } from "@/lib/levels";
@@ -14,18 +24,28 @@ import { sportVisual } from "@/lib/sport-visuals";
 import { PROGRAMS } from "@/lib/programs";
 import { AnimatedBolt, AnimatedFire, TagChip } from "@/components/hype-bits";
 import { programBadges } from "@/lib/program-badges";
+import { dailyCoachTip } from "@/lib/coach-tips";
 
 export const Route = createFileRoute("/_authenticated/home")({
   head: () => ({
     meta: [
-      { title: "Dashboard — ATHLETE OS" },
-      { name: "description", content: "Your streak, tonnage and next session at a glance." },
-      { property: "og:title", content: "Dashboard — ATHLETE OS" },
-      { property: "og:description", content: "Your streak, tonnage and next session." },
+      { title: "Command Center — ATHLETE OS" },
+      {
+        name: "description",
+        content:
+          "Your streak, weekly goal ring, tonnage, PRs, next session and daily coach note in one high-energy dashboard.",
+      },
+      { property: "og:title", content: "Command Center — ATHLETE OS" },
+      {
+        property: "og:description",
+        content: "Streak, weekly ring, tonnage, PRs and your next session at a glance.",
+      },
     ],
   }),
   component: HomePage,
 });
+
+const FEATURED_IDS = ["off-season-soccer-agility", "vertical-jump", "speed-acceleration"];
 
 function HomePage() {
   const { user } = Route.useRouteContext();
@@ -33,6 +53,8 @@ function HomePage() {
   const profile = useQuery({ queryKey: ["profile"], queryFn: () => fetchProfile(user.id) });
   const workouts = useQuery({ queryKey: ["workouts"], queryFn: fetchWorkouts });
   const routines = useQuery({ queryKey: ["routines"], queryFn: fetchRoutines });
+  const scheduled = useQuery({ queryKey: ["scheduled"], queryFn: fetchScheduled });
+  const prs = useQuery({ queryKey: ["prs"], queryFn: fetchPRs });
 
   useEffect(() => {
     if (profile.data && !profile.data.onboarded) navigate({ to: "/onboarding", replace: true });
@@ -44,111 +66,228 @@ function HomePage() {
   const thisWeek = list.filter(
     (w) => Date.now() - new Date(w.started_at).getTime() < 7 * 864e5,
   ).length;
+  const prCount = prs.data?.length ?? 0;
 
   const { level, progress, ceil } = useMemo(
-    () => levelFromXp(trainingXp({ tonnage, sessions: list.length, prCount: 0 })),
-    [tonnage, list.length],
+    () => levelFromXp(trainingXp({ tonnage, sessions: list.length, prCount })),
+    [tonnage, list.length, prCount],
   );
-  const xp = trainingXp({ tonnage, sessions: list.length, prCount: 0 });
+  const xp = trainingXp({ tonnage, sessions: list.length, prCount });
 
-  const suggested = PROGRAMS.filter((p) =>
-    (profile.data?.tracks ?? []).some((t) => p.tracks.includes(t)),
-  ).slice(0, 4);
+  /** Today's scheduled session, else the next upcoming one, else the newest routine. */
+  const nextUp = useMemo(() => {
+    const rows = (scheduled.data ?? []).filter((s) => !s.completed_at);
+    const today = isoDay(new Date());
+    const todays = rows.find((s) => s.scheduled_for === today);
+    const upcoming = rows.find((s) => s.scheduled_for >= today);
+    const pick = todays ?? upcoming;
+    if (pick) {
+      const sets = pick.exercises.reduce((a, e) => a + (e.sets || 3), 0);
+      return {
+        eyebrow: pick.scheduled_for === today ? "Today's session" : "Next session",
+        title: pick.name,
+        meta: [pick.focus, `${Math.max(20, Math.round((sets * 2.6 + 8) / 5) * 5)} Min`]
+          .filter(Boolean)
+          .join(" — "),
+      };
+    }
+    const r = routines.data?.[0];
+    if (r)
+      return {
+        eyebrow: "Next session",
+        title: r.name,
+        meta: `${r.exercises.length} exercises — your routine`,
+      };
+    return {
+      eyebrow: "Next session",
+      title: "Freestyle session",
+      meta: "Build it as you go — pick exercises live",
+    };
+  }, [scheduled.data, routines.data]);
+
+  const featured = useMemo(() => {
+    const picked = FEATURED_IDS.map((id) => PROGRAMS.find((p) => p.id === id)).filter(
+      (p): p is (typeof PROGRAMS)[number] => Boolean(p),
+    );
+    const tracked = PROGRAMS.filter(
+      (p) =>
+        !picked.includes(p) &&
+        (profile.data?.tracks ?? []).some((t) => p.tracks.includes(t)),
+    ).slice(0, 6);
+    return [...picked, ...tracked].slice(0, 8);
+  }, [profile.data?.tracks]);
 
   return (
-    <div className="space-y-4 pb-32">
-      <header className="flex items-end justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Welcome back</p>
-          <h1 className="font-display truncate text-3xl font-bold">
-            {profile.data?.display_name ?? "Athlete"}
-          </h1>
-          {profile.data?.sport ? (
-            <p className="mt-1 text-xs text-cyan">
-              {sportVisual(profile.data.sport).emoji} {profile.data.sport} track
+    <div className="mx-auto w-full max-w-md space-y-5 pb-32">
+      {/* ── Hero header ─────────────────────────────────── */}
+      <header className="space-y-3">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground">
+              Command center
             </p>
-          ) : null}
+            <h1 className="font-display truncate text-3xl font-black uppercase tracking-tight">
+              Welcome back, {profile.data?.display_name ?? "Athlete"} 💪
+            </h1>
+            {profile.data?.sport ? (
+              <p className="mt-1 text-xs text-cyan">
+                {sportVisual(profile.data.sport).emoji} {profile.data.sport} track
+              </p>
+            ) : null}
+          </div>
+          <Link
+            to="/profile"
+            className="glass shrink-0 rounded-2xl px-3 py-2 text-right leading-tight"
+          >
+            <span className="font-display block text-lg font-black text-lime">LVL {level}</span>
+            <span className="block text-[10px] uppercase tracking-wider text-muted-foreground">
+              {levelTitle(level)}
+            </span>
+          </Link>
         </div>
-        <Link
-          to="/profile"
-          className="glass shrink-0 rounded-2xl px-3 py-2 text-right leading-tight"
-        >
-          <span className="font-display block text-lg font-black text-lime">LVL {level}</span>
-          <span className="block text-[10px] uppercase tracking-wider text-muted-foreground">
-            {levelTitle(level)}
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="glass glow-flare flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold">
+            <AnimatedFire size={16} />
+            <span className="text-flare">{streak}-Day Streak</span>
           </span>
-        </Link>
+          <span className="glass flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold text-lime">
+            <Trophy size={13} /> {prCount} PRs
+          </span>
+          <span className="glass rounded-full px-3 py-1.5 text-xs font-bold text-cyan">
+            {xp}/{ceil} XP
+          </span>
+        </div>
       </header>
 
-      {/* ── Bento grid ─────────────────────────────────────── */}
-      <div className="grid grid-cols-2 gap-3">
-        {/* Hero action — full width */}
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="col-span-2"
-        >
-          <Link to="/log" className="block">
-            <div className="glass glow-lime pulse-ring cta-glass relative flex items-center gap-4 overflow-hidden rounded-2xl p-5">
-              <span className="absolute -right-8 -top-10 h-32 w-32 rounded-full bg-primary/20 blur-2xl" />
-              <span className="relative flex h-14 w-14 items-center justify-center rounded-2xl bg-primary text-primary-foreground">
-                <Play size={26} />
-              </span>
-              <div className="relative flex-1">
-                <p className="font-display text-xl font-black uppercase tracking-wide">
-                  Start training
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  Empty session, routine or program day
-                </p>
-              </div>
-              <ChevronRight className="relative text-muted-foreground" size={20} />
-            </div>
+      {/* ── Next workout CTA ────────────────────────────── */}
+      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
+        <div className="glass glow-lime pulse-ring cta-glass relative overflow-hidden rounded-3xl p-5">
+          <span className="absolute -right-10 -top-12 h-36 w-36 rounded-full bg-primary/25 blur-3xl" />
+          <p className="relative text-[11px] uppercase tracking-[0.22em] text-muted-foreground">
+            {nextUp.eyebrow}
+          </p>
+          <p className="font-display relative mt-1 text-2xl font-black uppercase leading-tight">
+            {nextUp.title}
+          </p>
+          <p className="relative mt-1 text-xs text-muted-foreground">{nextUp.meta}</p>
+          <Link
+            to="/log"
+            className="glow-lime relative mt-4 flex items-center justify-center gap-2 rounded-2xl bg-primary py-3.5 text-sm font-black uppercase tracking-wide text-primary-foreground transition-transform active:scale-[0.98]"
+          >
+            <Play size={18} /> Start training
           </Link>
-        </motion.div>
-
-        {/* Streak — full width, animated flame */}
-        <div className="col-span-2">
-          <StreakBanner days={streak} />
         </div>
+      </motion.div>
 
-        {/* Weekly ring */}
-        <GlassCard className="flex flex-col items-center justify-center p-4">
-          <ProgressRing
-            value={thisWeek}
-            goal={4}
-            accent="cyan"
-            label={`${thisWeek}/4`}
-            caption={`${thisWeek} of 4 workouts done`}
-          />
+      {/* ── Quick stats + weekly ring ───────────────────── */}
+      <div className="grid grid-cols-3 gap-2">
+        <GlassCard className="flex flex-col items-center gap-1 p-3 text-center" glow="cyan">
+          <span className="font-display text-2xl font-black text-cyan">{thisWeek}</span>
+          <p className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
+            Workouts this week
+          </p>
         </GlassCard>
+        <GlassCard className="flex flex-col items-center gap-1 p-3 text-center" glow="lime">
+          <AnimatedBolt size={24} />
+          <span className="font-display text-lg font-black text-lime">
+            {formatVolume(tonnage)}
+          </span>
+          <p className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">Tonnage</p>
+        </GlassCard>
+        <GlassCard className="flex flex-col items-center gap-1 p-3 text-center" glow="flare">
+          <Trophy size={20} className="text-flare" />
+          <span className="font-display text-lg font-black text-flare">{prCount}</span>
+          <p className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
+            Personal records
+          </p>
+        </GlassCard>
+      </div>
 
-        {/* Level ring + tonnage */}
-        <div className="flex flex-col gap-3">
-          <GlassCard className="flex items-center gap-3 p-4">
-            <ProgressRing value={progress * 100} goal={100} accent="lime" size={54}>
-              <span className="font-display text-xs font-black text-lime">{level}</span>
+      <GlassCard className="flex items-center gap-4 p-4">
+        <ProgressRing
+          value={thisWeek}
+          goal={4}
+          accent="cyan"
+          label={`${thisWeek}/4`}
+          size={88}
+        />
+        <div className="min-w-0 flex-1">
+          <p className="font-display text-sm font-black uppercase tracking-wide">Weekly goal</p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {thisWeek} of 4 workouts completed
+            {thisWeek >= 4 ? " — goal smashed 🔥" : ` · ${4 - thisWeek} to go`}
+          </p>
+          <div className="mt-3 flex items-center gap-2">
+            <ProgressRing value={progress * 100} goal={100} accent="lime" size={40}>
+              <span className="font-display text-[10px] font-black text-lime">{level}</span>
             </ProgressRing>
-            <div className="min-w-0">
-              <p className="truncate text-xs font-bold">{levelTitle(level)}</p>
-              <p className="text-[10px] text-muted-foreground">
-                {xp}/{ceil} XP
-              </p>
-            </div>
-          </GlassCard>
-          <GlassCard className="flex items-center gap-3 p-4">
-            <AnimatedBolt size={30} />
-            <div className="min-w-0">
-              <p className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
-                Tonnage
-              </p>
-              <p className="font-display text-xl font-black text-lime">{formatVolume(tonnage)}</p>
-              <p className="text-[10px] text-muted-foreground">{list.length} sessions</p>
-            </div>
-          </GlassCard>
+            <p className="text-[11px] text-muted-foreground">
+              {levelTitle(level)} · {list.length} sessions logged
+            </p>
+          </div>
         </div>
+      </GlassCard>
 
-        {/* Glowing action tiles */}
+      {/* ── Daily coach note ────────────────────────────── */}
+      <Link to="/coach" className="block">
+        <GlassCard className="relative overflow-hidden p-4" glow="flare">
+          <span className="absolute -left-6 bottom-0 h-24 w-24 rounded-full bg-flare/20 blur-2xl" />
+          <div className="relative flex items-start gap-3">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-flare/20 text-lg">
+              🧠
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="font-display text-xs font-black uppercase tracking-[0.16em] text-flare">
+                Coach note
+              </p>
+              <p className="mt-1 text-sm leading-snug">
+                {dailyCoachTip(profile.data?.display_name ?? "")}
+              </p>
+              <p className="mt-2 text-[11px] font-bold text-cyan">Ask Titan AI →</p>
+            </div>
+          </div>
+        </GlassCard>
+      </Link>
+
+      {/* ── Featured programs carousel ──────────────────── */}
+      <section>
+        <SectionTitle
+          action={
+            <Link to="/routines" className="text-xs text-lime">
+              All programs
+            </Link>
+          }
+        >
+          Featured programs
+        </SectionTitle>
+        <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-2">
+          {featured.map((p) => {
+            const v = sportVisual(p.group);
+            return (
+              <Link key={p.id} to="/routines" className="w-56 shrink-0">
+                <GlassCard className="relative h-full overflow-hidden p-4" glow={v.accent}>
+                  <span className="absolute -right-4 -top-5 text-7xl opacity-15">{v.emoji}</span>
+                  <span className="text-2xl">{v.emoji}</span>
+                  <p className="font-display mt-2 text-sm font-black uppercase leading-tight">
+                    {p.name}
+                  </p>
+                  <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{p.tagline}</p>
+                  <div className="mt-3 flex flex-wrap gap-1">
+                    {programBadges(p)
+                      .slice(0, 3)
+                      .map((b) => (
+                        <TagChip key={b.label} badge={b} />
+                      ))}
+                  </div>
+                </GlassCard>
+              </Link>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* ── Quick access tiles ──────────────────────────── */}
+      <div className="grid grid-cols-2 gap-3">
         <Link to="/form" className="col-span-2">
           <div className="glass glow-flare relative flex items-center gap-3 overflow-hidden rounded-2xl p-4">
             <span className="absolute -left-6 bottom-0 h-24 w-24 rounded-full bg-flare/20 blur-2xl" />
@@ -164,7 +303,6 @@ function HomePage() {
             <ChevronRight size={18} className="relative text-muted-foreground" />
           </div>
         </Link>
-
         <Link to="/library">
           <GlassCard className="flex h-full flex-col justify-between gap-2 p-4" glow="lime">
             <Dumbbell size={18} className="text-lime" />
@@ -230,32 +368,6 @@ function HomePage() {
           </GlassCard>
         )}
       </section>
-
-      {suggested.length ? (
-        <section>
-          <SectionTitle>Picked for your track</SectionTitle>
-          <div className="flex gap-3 overflow-x-auto pb-2">
-            {suggested.map((p) => {
-              const v = sportVisual(p.group);
-              return (
-                <Link key={p.id} to="/routines" className="w-56 shrink-0">
-                  <GlassCard className="relative h-full overflow-hidden p-4" glow={v.accent}>
-                    <span className="absolute -right-4 -top-4 text-6xl opacity-20">{v.emoji}</span>
-                    <span className="text-2xl">{v.emoji}</span>
-                    <p className="font-display mt-2 text-sm font-bold">{p.name}</p>
-                    <p className="mt-1 text-xs text-muted-foreground">{p.tagline}</p>
-                    <div className="mt-3 flex flex-wrap gap-1">
-                      {programBadges(p).slice(0, 3).map((b) => (
-                        <TagChip key={b.label} badge={b} />
-                      ))}
-                    </div>
-                  </GlassCard>
-                </Link>
-              );
-            })}
-          </div>
-        </section>
-      ) : null}
 
       <section>
         <SectionTitle

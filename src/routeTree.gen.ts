@@ -28,6 +28,7 @@ import { Route as AuthenticatedBuilderRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedAnalysisRouteImport } from './routes/_authenticated/analysis'
 import { Route as AuthenticatedMessagesIndexRouteImport } from './routes/_authenticated/messages.index'
 import { Route as AuthenticatedCoachIndexRouteImport } from './routes/_authenticated/coach.index'
+import { Route as AuthenticatedTeammateAthleteIdRouteImport } from './routes/_authenticated/teammate.$athleteId'
 import { Route as AuthenticatedMessagesChatIdRouteImport } from './routes/_authenticated/messages.$chatId'
 import { Route as AuthenticatedCoachThreadIdRouteImport } from './routes/_authenticated/coach.$threadId'
 
@@ -126,6 +127,12 @@ const AuthenticatedCoachIndexRoute = AuthenticatedCoachIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedCoachRoute,
 } as any)
+const AuthenticatedTeammateAthleteIdRoute =
+  AuthenticatedTeammateAthleteIdRouteImport.update({
+    id: '/teammate/$athleteId',
+    path: '/teammate/$athleteId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedMessagesChatIdRoute =
   AuthenticatedMessagesChatIdRouteImport.update({
     id: '/$chatId',
@@ -158,6 +165,7 @@ export interface FileRoutesByFullPath {
   '/api/chat': typeof ApiChatRoute
   '/coach/$threadId': typeof AuthenticatedCoachThreadIdRoute
   '/messages/$chatId': typeof AuthenticatedMessagesChatIdRoute
+  '/teammate/$athleteId': typeof AuthenticatedTeammateAthleteIdRoute
   '/coach/': typeof AuthenticatedCoachIndexRoute
   '/messages/': typeof AuthenticatedMessagesIndexRoute
 }
@@ -178,6 +186,7 @@ export interface FileRoutesByTo {
   '/api/chat': typeof ApiChatRoute
   '/coach/$threadId': typeof AuthenticatedCoachThreadIdRoute
   '/messages/$chatId': typeof AuthenticatedMessagesChatIdRoute
+  '/teammate/$athleteId': typeof AuthenticatedTeammateAthleteIdRoute
   '/coach': typeof AuthenticatedCoachIndexRoute
   '/messages': typeof AuthenticatedMessagesIndexRoute
 }
@@ -202,6 +211,7 @@ export interface FileRoutesById {
   '/api/chat': typeof ApiChatRoute
   '/_authenticated/coach/$threadId': typeof AuthenticatedCoachThreadIdRoute
   '/_authenticated/messages/$chatId': typeof AuthenticatedMessagesChatIdRoute
+  '/_authenticated/teammate/$athleteId': typeof AuthenticatedTeammateAthleteIdRoute
   '/_authenticated/coach/': typeof AuthenticatedCoachIndexRoute
   '/_authenticated/messages/': typeof AuthenticatedMessagesIndexRoute
 }
@@ -226,6 +236,7 @@ export interface FileRouteTypes {
     | '/api/chat'
     | '/coach/$threadId'
     | '/messages/$chatId'
+    | '/teammate/$athleteId'
     | '/coach/'
     | '/messages/'
   fileRoutesByTo: FileRoutesByTo
@@ -246,6 +257,7 @@ export interface FileRouteTypes {
     | '/api/chat'
     | '/coach/$threadId'
     | '/messages/$chatId'
+    | '/teammate/$athleteId'
     | '/coach'
     | '/messages'
   id:
@@ -269,6 +281,7 @@ export interface FileRouteTypes {
     | '/api/chat'
     | '/_authenticated/coach/$threadId'
     | '/_authenticated/messages/$chatId'
+    | '/_authenticated/teammate/$athleteId'
     | '/_authenticated/coach/'
     | '/_authenticated/messages/'
   fileRoutesById: FileRoutesById
@@ -415,6 +428,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCoachIndexRouteImport
       parentRoute: typeof AuthenticatedCoachRoute
     }
+    '/_authenticated/teammate/$athleteId': {
+      id: '/_authenticated/teammate/$athleteId'
+      path: '/teammate/$athleteId'
+      fullPath: '/teammate/$athleteId'
+      preLoaderRoute: typeof AuthenticatedTeammateAthleteIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/messages/$chatId': {
       id: '/_authenticated/messages/$chatId'
       path: '/$chatId'
@@ -474,6 +494,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedProgressRoute: typeof AuthenticatedProgressRoute
   AuthenticatedRoutinesRoute: typeof AuthenticatedRoutinesRoute
+  AuthenticatedTeammateAthleteIdRoute: typeof AuthenticatedTeammateAthleteIdRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -490,6 +511,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedProgressRoute: AuthenticatedProgressRoute,
   AuthenticatedRoutinesRoute: AuthenticatedRoutinesRoute,
+  AuthenticatedTeammateAthleteIdRoute: AuthenticatedTeammateAthleteIdRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =

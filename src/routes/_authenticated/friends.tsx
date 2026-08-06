@@ -279,10 +279,22 @@ function FriendsPage() {
               >
                 <GlassCard className="p-4">
                   <div className="flex items-center gap-3">
-                    <Avatar name={item.display_name} accent={v.accent} />
+                    <Link
+                      to="/teammate/$athleteId"
+                      params={{ athleteId: item.athlete_id }}
+                      className="shrink-0"
+                    >
+                      <Avatar name={item.display_name} accent={v.accent} />
+                    </Link>
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm">
-                        <span className="font-bold">{item.display_name}</span>{" "}
+                        <Link
+                          to="/teammate/$athleteId"
+                          params={{ athleteId: item.athlete_id }}
+                          className="font-bold underline-offset-2 hover:underline"
+                        >
+                          {item.display_name}
+                        </Link>{" "}
                         <span className="text-muted-foreground">just logged</span>
                       </p>
                       <p className="truncate text-sm font-semibold text-lime">
@@ -408,8 +420,14 @@ function FriendsPage() {
                   >
                     {i < 3 ? ["🥇", "🥈", "🥉"][i] : i + 1}
                   </span>
-                  <Avatar name={f.display_name} accent={sportVisual(f.sport).accent} />
-                  <div className="min-w-0 flex-1">
+                  <Link to="/teammate/$athleteId" params={{ athleteId: f.id }} className="shrink-0">
+                    <Avatar name={f.display_name} accent={sportVisual(f.sport).accent} />
+                  </Link>
+                  <Link
+                    to="/teammate/$athleteId"
+                    params={{ athleteId: f.id }}
+                    className="min-w-0 flex-1"
+                  >
                     <p className="truncate text-sm font-semibold">
                       {f.display_name}
                       {f.id === user.id ? " (you)" : ""}
@@ -419,7 +437,7 @@ function FriendsPage() {
                       {f.grad_year ? ` · '${String(f.grad_year).slice(2)}` : ""} ·{" "}
                       {f.workout_count} sessions
                     </p>
-                  </div>
+                  </Link>
                   <div className="text-right">
                     <p className="font-display text-sm font-bold text-lime">
                       {metric === "volume"
