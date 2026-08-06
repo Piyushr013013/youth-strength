@@ -420,8 +420,14 @@ function FriendsPage() {
                   >
                     {i < 3 ? ["🥇", "🥈", "🥉"][i] : i + 1}
                   </span>
-                  <Avatar name={f.display_name} accent={sportVisual(f.sport).accent} />
-                  <div className="min-w-0 flex-1">
+                  <Link to="/teammate/$athleteId" params={{ athleteId: f.id }} className="shrink-0">
+                    <Avatar name={f.display_name} accent={sportVisual(f.sport).accent} />
+                  </Link>
+                  <Link
+                    to="/teammate/$athleteId"
+                    params={{ athleteId: f.id }}
+                    className="min-w-0 flex-1"
+                  >
                     <p className="truncate text-sm font-semibold">
                       {f.display_name}
                       {f.id === user.id ? " (you)" : ""}
@@ -431,7 +437,7 @@ function FriendsPage() {
                       {f.grad_year ? ` · '${String(f.grad_year).slice(2)}` : ""} ·{" "}
                       {f.workout_count} sessions
                     </p>
-                  </div>
+                  </Link>
                   <div className="text-right">
                     <p className="font-display text-sm font-bold text-lime">
                       {metric === "volume"
