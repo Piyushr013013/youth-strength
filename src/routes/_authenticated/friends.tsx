@@ -87,6 +87,7 @@ function FriendsPage() {
   const [tab, setTab] = useState<"feed" | "board" | "requests" | "find">("feed");
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<string>("all");
+  const [metric, setMetric] = useState<"volume" | "sessions" | "streak">("volume");
 
   const dm = useMutation({
     mutationFn: (id: string) => openDirectChat(id),
@@ -179,17 +180,25 @@ function FriendsPage() {
   }, [board.data]);
 
   const rankings = useMemo(() => {
-    const rows = board.data ?? [];
-    if (filter === "all") return rows;
-    const [kind, value] = filter.split(":");
-    return rows.filter((r) =>
-      kind === "school"
-        ? r.school === value
-        : kind === "club"
-          ? r.club_team === value
-          : String(r.grad_year) === value,
+    let rows = board.data ?? [];
+    if (filter !== "all") {
+      const [kind, value] = filter.split(":");
+      rows = rows.filter((r) =>
+        kind === "school"
+          ? r.school === value
+          : kind === "club"
+            ? r.club_team === value
+            : String(r.grad_year) === value,
+      );
+    }
+    return [...rows].sort((a, b) =>
+      metric === "volume"
+        ? b.total_volume - a.total_volume
+        : metric === "sessions"
+          ? b.weekly_sessions - a.weekly_sessions
+          : b.streak_days - a.streak_days,
     );
-  }, [board.data, filter]);
+  }, [board.data, filter, metric]);
 
   const invalidate = () => {
     qc.invalidateQueries({ queryKey: ["friendships"] });
@@ -221,7 +230,7 @@ function FriendsPage() {
     (friendships.data ?? []).some((f) => f.requester_id === id || f.addressee_id === id);
 
   return (
-    <div className="space-y-5 pb-32">
+    <div className="mx-auto w-full max-w-md space-y-5 pb-32">
       <div className="flex items-start gap-3">
         <div className="min-w-0 flex-1">
           <h1 className="font-display text-3xl font-bold">Teammates</h1>
@@ -347,7 +356,35 @@ function FriendsPage() {
               </Chip>
             ))}
           </div>
-          <SectionTitle>30-day volume</SectionTitle>
+          <div className="mb-3 grid grid-cols-3 gap-2">
+            {(
+              [
+                { key: "volume", label: "30-Day Volume" },
+                { key: "sessions", label: "Weekly Sessions" },
+                { key: "streak", label: "Current Streak" },
+              ] as const
+            ).map((m) => (
+              <button
+                key={m.key}
+                onClick={() => setMetric(m.key)}
+                className={cn(
+                  "rounded-xl border px-2 py-2 text-[11px] font-bold leading-tight transition",
+                  metric === m.key
+                    ? "glow-lime border-lime/60 bg-lime/15 text-lime"
+                    : "border-border bg-surface-2/60 text-muted-foreground",
+                )}
+              >
+                {m.label}
+              </button>
+            ))}
+          </div>
+          <SectionTitle>
+            {metric === "volume"
+              ? "30-day volume"
+              : metric === "sessions"
+                ? "Sessions this week"
+                : "Current streak"}
+          </SectionTitle>
           <div className="space-y-2">
             {rankings.map((f, i) => {
               const live = f.last_workout
@@ -357,10 +394,18 @@ function FriendsPage() {
                 <GlassCard
                   key={f.id}
                   className="flex items-center gap-3 p-4"
-                  glow={i === 0 ? "lime" : null}
+                  glow={i < 3 ? (i === 0 ? "lime" : "cyan") : null}
                 >
-                  <span className="font-display w-5 text-center text-sm font-black text-muted-foreground">
-                    {i + 1}
+                  <span
+                    className={cn(
+                      "font-display flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-xs font-black",
+                      i === 0 && "border-lime/70 bg-lime/20 text-lime shadow-[0_0_18px_-4px_hsl(var(--lime))]",
+                      i === 1 && "border-cyan/70 bg-cyan/15 text-cyan",
+                      i === 2 && "border-flare/70 bg-flare/15 text-flare",
+                      i > 2 && "border-transparent text-muted-foreground",
+                    )}
+                  >
+                    {i < 3 ? ["🥇", "🥈", "🥉"][i] : i + 1}
                   </span>
                   <Avatar name={f.display_name} accent={sportVisual(f.sport).accent} />
                   <div className="min-w-0 flex-1">
@@ -376,7 +421,11 @@ function FriendsPage() {
                   </div>
                   <div className="text-right">
                     <p className="font-display text-sm font-bold text-lime">
-                      {formatVolume(f.total_volume)}
+                      {metric === "volume"
+                        ? formatVolume(f.total_volume)
+                        : metric === "sessions"
+                          ? `${f.weekly_sessions} this wk`
+                          : `${f.streak_days}d 🔥`}
                     </p>
                     <p
                       className={
@@ -502,12 +551,14 @@ function FriendsPage() {
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search athletes by name…"
+              placeholder="Search by name, school or sport…"
               className="w-full rounded-xl border border-border bg-surface-2/70 py-3 pl-9 pr-3 text-sm outline-none placeholder:text-muted-foreground focus:border-primary/60"
             />
           </div>
           {query.trim().length < 2 ? (
-            <p className="text-xs text-muted-foreground">Type at least 2 characters.</p>
+            <p className="text-xs text-muted-foreground">
+              Type at least 2 characters — name, school, club team or sport track.
+            </p>
           ) : null}
           <div className="space-y-2">
             {(search.data ?? []).map((a) => (
@@ -515,7 +566,9 @@ function FriendsPage() {
                 <Avatar name={a.display_name} accent={sportVisual(a.sport).accent} />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-semibold">{a.display_name}</p>
-                  <p className="truncate text-xs text-muted-foreground">{a.sport ?? "Athlete"}</p>
+                  <p className="truncate text-xs text-muted-foreground">
+                    {[a.sport, a.school ?? a.club_team].filter(Boolean).join(" · ") || "Athlete"}
+                  </p>
                 </div>
                 {alreadyLinked(a.id) ? (
                   <span className="text-xs text-muted-foreground">Linked</span>
@@ -524,7 +577,7 @@ function FriendsPage() {
                     onClick={() => add.mutate(a.id)}
                     className="flex items-center gap-1 rounded-lg bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground"
                   >
-                    <UserPlus size={13} /> Add
+                    <UserPlus size={13} /> Add Teammate
                   </button>
                 )}
               </GlassCard>
