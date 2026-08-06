@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      athlete_reports: {
+        Row: {
+          created_at: string
+          details: string | null
+          id: string
+          reason: string
+          reported_id: string
+          reporter_id: string
+        }
+        Insert: {
+          created_at?: string
+          details?: string | null
+          id?: string
+          reason: string
+          reported_id: string
+          reporter_id: string
+        }
+        Update: {
+          created_at?: string
+          details?: string | null
+          id?: string
+          reason?: string
+          reported_id?: string
+          reporter_id?: string
+        }
+        Relationships: []
+      }
       blocked_users: {
         Row: {
           blocked_id: string
@@ -486,6 +513,23 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      athlete_public_profile: {
+        Args: { _id: string }
+        Returns: {
+          club_team: string
+          display_name: string
+          grad_year: number
+          id: string
+          is_friend: boolean
+          last_workout: string
+          school: string
+          sport: string
+          streak_days: number
+          total_volume: number
+          weekly_sessions: number
+          workout_count: number
+        }[]
+      }
       chat_participants: {
         Args: { _chat_id: string }
         Returns: {
