@@ -399,9 +399,9 @@ function FriendsPage() {
                   <span
                     className={cn(
                       "font-display flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-xs font-black",
-                      i === 0 && "border-lime/70 bg-lime/20 text-lime shadow-[0_0_18px_-4px_hsl(var(--lime))]",
-                      i === 1 && "border-cyan/70 bg-cyan/15 text-cyan",
-                      i === 2 && "border-flare/70 bg-flare/15 text-flare",
+                      i === 0 && "glow-lime border-lime/70 bg-lime/20 text-lime",
+                      i === 1 && "glow-cyan border-cyan/70 bg-cyan/15 text-cyan",
+                      i === 2 && "glow-flare border-flare/70 bg-flare/15 text-flare",
                       i > 2 && "border-transparent text-muted-foreground",
                     )}
                   >
