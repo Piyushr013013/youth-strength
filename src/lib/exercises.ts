@@ -1,6 +1,8 @@
 import type { Exercise, ExerciseCategory } from "./types";
 import { EXTRA_EXERCISES } from "./exercises-extended";
 import { MORE_EXERCISES } from "./exercises-more";
+import { SPORT_EXERCISES } from "./exercises-sports";
+
 
 const e = (
   id: string,
@@ -140,9 +142,15 @@ const BASE_EXERCISES: Exercise[] = [
 ];
 
 const seen = new Set<string>();
-export const EXERCISES: Exercise[] = [...BASE_EXERCISES, ...EXTRA_EXERCISES, ...MORE_EXERCISES]
+export const EXERCISES: Exercise[] = [
+  ...BASE_EXERCISES,
+  ...EXTRA_EXERCISES,
+  ...MORE_EXERCISES,
+  ...SPORT_EXERCISES,
+]
   .filter((x) => (seen.has(x.id) ? false : (seen.add(x.id), true)))
   .sort((a, b) => a.name.localeCompare(b.name));
+
 
 
 
@@ -203,20 +211,95 @@ export function findExercise(id: string) {
   return EXERCISE_MAP.get(id);
 }
 
+/** Normalize for fuzzy matching: lowercase, strip punctuation, de-pluralize. */
+function normalize(text: string) {
+  return text
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim()
+    .split(" ")
+    .map((w) => (w.length > 3 && w.endsWith("s") && !w.endsWith("ss") ? w.slice(0, -1) : w))
+    .join(" ");
+}
+
+const SYNONYMS: Record<string, string> = {
+  pushup: "push up",
+  pullup: "pull up",
+  chinup: "chin up",
+  situp: "sit up",
+  bench: "bench press",
+  ohp: "overhead press",
+  rdl: "romanian deadlift",
+  db: "dumbbell",
+  bb: "barbell",
+  kb: "kettlebell",
+  smith: "smith machine",
+  abs: "core",
+  cardio: "conditioning",
+};
+
+function haystack(x: Exercise) {
+  return normalize(
+    [x.name, x.equipment, x.category, x.pattern, ...x.muscles].join(" "),
+  );
+}
+
+const HAYSTACKS = new Map(EXERCISES.map((x) => [x.id, haystack(x)]));
+
+const STOPWORDS = new Set(["regular", "standard", "normal", "basic", "plain", "a", "the", "for", "with", "and"]);
+
+function queryTokens(query: string) {
+  return normalize(query)
+    .split(" ")
+    .filter((w) => w && !STOPWORDS.has(w))
+    .flatMap((w) => (SYNONYMS[w] ? normalize(SYNONYMS[w]).split(" ") : [w]));
+}
+
+const hasWord = (hay: string, w: string) =>
+  hay.includes(w) || (w.length > 2 && hay.includes(w.replace(/s$/, "")));
+
+/** True when every word of the query appears somewhere in the exercise. */
+export function matchesExercise(x: Exercise, query: string, mode: "all" | "any" = "all") {
+  const tokens = queryTokens(query);
+  if (!tokens.length) return true;
+  const hay = HAYSTACKS.get(x.id) ?? haystack(x);
+  return mode === "all"
+    ? tokens.every((w) => hasWord(hay, w))
+    : tokens.some((w) => hasWord(hay, w));
+}
+
+/** Most general / closest names first (so "push up" beats "archer push up"). */
+export function rankExercises(list: Exercise[], query: string) {
+  const q = normalize(query);
+  if (!q) return list;
+  const score = (x: Exercise) => {
+    const n = normalize(x.name);
+    if (n === q) return 0;
+    if (n.startsWith(q)) return 1;
+    if (n.includes(q)) return 2;
+    return 3;
+  };
+  return [...list].sort(
+    (a, b) => score(a) - score(b) || a.name.length - b.name.length || a.name.localeCompare(b.name),
+  );
+}
+
 export function searchExercises(
   query: string,
   filters: { category?: string | null; muscle?: string | null; equipment?: string | null } = {},
 ) {
-  const q = query.trim().toLowerCase();
-  return EXERCISES.filter((x) => {
+  const passesFilters = (x: Exercise) => {
     if (filters.category && x.category !== filters.category) return false;
     if (filters.muscle && !x.muscles.includes(filters.muscle as never)) return false;
     if (filters.equipment && x.equipment !== filters.equipment) return false;
-    if (!q) return true;
-    return (
-      x.name.toLowerCase().includes(q) ||
-      x.equipment.toLowerCase().includes(q) ||
-      x.muscles.some((m) => m.includes(q))
-    );
-  });
+    return true;
+  };
+  const strict = EXERCISES.filter((x) => passesFilters(x) && matchesExercise(x, query));
+  if (strict.length || !query.trim()) return rankExercises(strict, query);
+  // Nothing matched every word — fall back to any-word matching so odd phrasing still finds lifts.
+  return rankExercises(
+    EXERCISES.filter((x) => passesFilters(x) && matchesExercise(x, query, "any")),
+    query,
+  );
 }
+

@@ -46,11 +46,20 @@ export async function fetchTeammateProfile(id: string): Promise<TeammateProfile 
 
 export const REPORT_REASONS = [
   "Harassment or bullying",
+  "Hate speech or slurs",
+  "Threats or violence",
   "Inappropriate messages",
+  "Sexual content or solicitation",
+  "Nudity in a shared clip",
   "Fake or impersonating account",
-  "Spam",
+  "Underage safety concern",
+  "Doping, PEDs or unsafe advice",
+  "Cheating or fake workout data",
+  "Spam or scam links",
+  "Unwanted contact after blocking",
   "Something else",
 ] as const;
+
 
 export async function reportAthlete(
   reporterId: string,
