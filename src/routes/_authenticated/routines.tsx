@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Search, Play, ChevronRight, X, CalendarPlus } from "lucide-react";
 import { toast } from "sonner";
@@ -62,6 +62,15 @@ function RoutinesPage() {
       );
     });
   }, [group, query]);
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (ev: KeyboardEvent) => {
+      if (ev.key === "Escape") setOpen(null);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open]);
 
   const startDay = (program: Program, day: ProgramDay) => {
     start({ name: `${program.name} — ${day.day}`, exercises: [] });
