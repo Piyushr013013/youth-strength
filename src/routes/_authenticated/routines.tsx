@@ -177,8 +177,8 @@ function RoutinesPage() {
       </section>
 
       {open ? (
-        <div className="fixed inset-0 z-50 flex flex-col bg-background px-4 pt-6">
-          <div className="mb-3 flex items-start justify-between gap-3">
+        <div className="fixed inset-0 z-50 flex flex-col bg-background">
+          <div className="sticky top-0 z-10 flex items-start justify-between gap-3 border-b border-border/60 bg-background/95 px-4 pb-3 pt-6 backdrop-blur">
             <div className="min-w-0">
               <h2 className="font-display truncate text-xl font-bold">{open.name}</h2>
               <p className="text-xs text-muted-foreground">
@@ -187,13 +187,14 @@ function RoutinesPage() {
             </div>
             <button
               onClick={() => setOpen(null)}
-              className="rounded-xl border border-border p-2 text-muted-foreground"
+              className="flex shrink-0 items-center gap-1 rounded-xl border border-border bg-surface-2/80 px-3 py-2 text-xs font-bold uppercase tracking-wider text-muted-foreground"
               aria-label="Close program"
             >
-              <X size={18} />
+              <X size={16} /> Close
             </button>
           </div>
-          <div className="min-h-0 flex-1 space-y-3 overflow-y-auto pb-32">
+          <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 pb-32 pt-3">
+
             <p className="text-sm text-muted-foreground">{open.tagline}</p>
             <button
               onClick={() => schedule.mutate(open)}
