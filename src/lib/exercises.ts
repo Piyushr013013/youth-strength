@@ -203,20 +203,78 @@ export function findExercise(id: string) {
   return EXERCISE_MAP.get(id);
 }
 
+/** Normalize for fuzzy matching: lowercase, strip punctuation, de-pluralize. */
+function normalize(text: string) {
+  return text
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim()
+    .split(" ")
+    .map((w) => (w.length > 3 && w.endsWith("s") && !w.endsWith("ss") ? w.slice(0, -1) : w))
+    .join(" ");
+}
+
+const SYNONYMS: Record<string, string> = {
+  pushup: "push up",
+  pullup: "pull up",
+  chinup: "chin up",
+  situp: "sit up",
+  bench: "bench press",
+  ohp: "overhead press",
+  rdl: "romanian deadlift",
+  db: "dumbbell",
+  bb: "barbell",
+  kb: "kettlebell",
+  smith: "smith machine",
+  abs: "core",
+  cardio: "conditioning",
+};
+
+function haystack(x: Exercise) {
+  return normalize(
+    [x.name, x.equipment, x.category, x.pattern, ...x.muscles].join(" "),
+  );
+}
+
+const HAYSTACKS = new Map(EXERCISES.map((x) => [x.id, haystack(x)]));
+
+/** True when every word of the query appears somewhere in the exercise. */
+export function matchesExercise(x: Exercise, query: string) {
+  const q = normalize(query);
+  if (!q) return true;
+  const hay = HAYSTACKS.get(x.id) ?? haystack(x);
+  return q
+    .split(" ")
+    .flatMap((w) => (SYNONYMS[w] ? normalize(SYNONYMS[w]).split(" ") : [w]))
+    .every((w) => hay.includes(w));
+}
+
+/** Most general / closest names first (so "push up" beats "archer push up"). */
+export function rankExercises(list: Exercise[], query: string) {
+  const q = normalize(query);
+  if (!q) return list;
+  const score = (x: Exercise) => {
+    const n = normalize(x.name);
+    if (n === q) return 0;
+    if (n.startsWith(q)) return 1;
+    if (n.includes(q)) return 2;
+    return 3;
+  };
+  return [...list].sort(
+    (a, b) => score(a) - score(b) || a.name.length - b.name.length || a.name.localeCompare(b.name),
+  );
+}
+
 export function searchExercises(
   query: string,
   filters: { category?: string | null; muscle?: string | null; equipment?: string | null } = {},
 ) {
-  const q = query.trim().toLowerCase();
-  return EXERCISES.filter((x) => {
+  const filtered = EXERCISES.filter((x) => {
     if (filters.category && x.category !== filters.category) return false;
     if (filters.muscle && !x.muscles.includes(filters.muscle as never)) return false;
     if (filters.equipment && x.equipment !== filters.equipment) return false;
-    if (!q) return true;
-    return (
-      x.name.toLowerCase().includes(q) ||
-      x.equipment.toLowerCase().includes(q) ||
-      x.muscles.some((m) => m.includes(q))
-    );
+    return matchesExercise(x, query);
   });
+  return rankExercises(filtered, query);
 }
+
