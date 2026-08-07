@@ -142,9 +142,15 @@ const BASE_EXERCISES: Exercise[] = [
 ];
 
 const seen = new Set<string>();
-export const EXERCISES: Exercise[] = [...BASE_EXERCISES, ...EXTRA_EXERCISES, ...MORE_EXERCISES]
+export const EXERCISES: Exercise[] = [
+  ...BASE_EXERCISES,
+  ...EXTRA_EXERCISES,
+  ...MORE_EXERCISES,
+  ...SPORT_EXERCISES,
+]
   .filter((x) => (seen.has(x.id) ? false : (seen.add(x.id), true)))
   .sort((a, b) => a.name.localeCompare(b.name));
+
 
 
 
