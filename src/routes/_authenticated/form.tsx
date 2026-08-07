@@ -2,11 +2,12 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Loader2, Search, Trash2, Upload, Video } from "lucide-react";
+import { Loader2, MessageCircle, Search, Send, Trash2, Upload, Video } from "lucide-react";
 import { toast } from "sonner";
 import { GlassCard, SectionTitle } from "@/components/ui-kit";
-import { EXERCISES } from "@/lib/exercises";
-import { judgeForm } from "@/lib/form-check.functions";
+import { searchExercises } from "@/lib/exercises";
+import { askAboutForm, judgeForm } from "@/lib/form-check.functions";
+import { Markdown } from "@/components/Markdown";
 import {
   deleteFormCheck,
   extractFrames,
@@ -45,9 +46,8 @@ function FormJudgePage() {
   const checks = useQuery({ queryKey: ["form-checks"], queryFn: fetchFormChecks });
 
   const matches = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return [];
-    return EXERCISES.filter((e) => e.name.toLowerCase().includes(q)).slice(0, 6);
+    if (!query.trim()) return [];
+    return searchExercises(query).slice(0, 10);
   }, [query]);
 
   const run = useMutation({
@@ -207,6 +207,7 @@ function FormJudgePage() {
               {c.feedback ? (
                 <p className="mt-2 text-xs leading-relaxed text-muted-foreground">{c.feedback}</p>
               ) : null}
+              <FormChat check={c} />
               {c.video_path ? (
                 <button
                   onClick={async () => {
@@ -230,6 +231,121 @@ function FormJudgePage() {
           ) : null}
         </div>
       </section>
+    </div>
+  );
+}
+
+function FormChat({
+  check,
+}: {
+  check: {
+    exercise_name: string;
+    score: number | null;
+    verdict: string | null;
+    cues: string[];
+    feedback: string | null;
+  };
+}) {
+  const ask = useServerFn(askAboutForm);
+  const [open, setOpen] = useState(false);
+  const [input, setInput] = useState("");
+  const [turns, setTurns] = useState<{ role: "user" | "assistant"; content: string }[]>([]);
+
+  const send = useMutation({
+    mutationFn: async (text: string) => {
+      const history = [...turns, { role: "user" as const, content: text }];
+      setTurns(history);
+      const res = await ask({
+        data: {
+          exerciseName: check.exercise_name,
+          score: check.score ?? 0,
+          verdict: check.verdict ?? "",
+          cues: check.cues ?? [],
+          feedback: check.feedback ?? "",
+          history,
+        },
+      });
+      setTurns([...history, { role: "assistant", content: res.reply }]);
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const submit = () => {
+    const text = input.trim();
+    if (!text || send.isPending) return;
+    setInput("");
+    setOpen(true);
+    send.mutate(text);
+  };
+
+  const quick = ["How do I fix this?", "Give me a drill", "Should I drop the weight?"];
+
+  return (
+    <div className="mt-3 border-t border-border/60 pt-3">
+      {!open ? (
+        <button
+          onClick={() => setOpen(true)}
+          className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-lime"
+        >
+          <MessageCircle size={14} /> Ask Titan about this
+        </button>
+      ) : (
+        <div className="space-y-2">
+          {turns.map((t, i) => (
+            <div
+              key={i}
+              className={cn(
+                "rounded-xl px-3 py-2 text-xs leading-relaxed",
+                t.role === "user"
+                  ? "ml-6 bg-primary/15 text-foreground"
+                  : "mr-2 border border-border/70 bg-surface-2/60",
+              )}
+            >
+              {t.role === "assistant" ? <Markdown>{t.content}</Markdown> : t.content}
+            </div>
+          ))}
+          {send.isPending ? (
+            <p className="flex items-center gap-2 text-xs text-muted-foreground">
+              <Loader2 size={13} className="animate-spin" /> Titan is thinking…
+            </p>
+          ) : null}
+          {!turns.length ? (
+            <div className="flex flex-wrap gap-1.5">
+              {quick.map((q) => (
+                <button
+                  key={q}
+                  onClick={() => {
+                    setInput("");
+                    send.mutate(q);
+                  }}
+                  className="rounded-full border border-border px-2.5 py-1 text-[11px] text-muted-foreground"
+                >
+                  {q}
+                </button>
+              ))}
+            </div>
+          ) : null}
+          <div className="flex items-center gap-2">
+            <input
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") submit();
+              }}
+              placeholder="Ask about your form…"
+              className="min-w-0 flex-1 rounded-xl border border-border bg-surface-2/70 px-3 py-2 text-xs outline-none focus:border-primary/60"
+            />
+            <button
+              onClick={submit}
+              disabled={send.isPending || !input.trim()}
+              aria-label="Send"
+              className="rounded-xl bg-primary p-2 text-primary-foreground disabled:opacity-50"
+            >
+              <Send size={14} />
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
