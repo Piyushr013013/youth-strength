@@ -246,15 +246,26 @@ function haystack(x: Exercise) {
 
 const HAYSTACKS = new Map(EXERCISES.map((x) => [x.id, haystack(x)]));
 
-/** True when every word of the query appears somewhere in the exercise. */
-export function matchesExercise(x: Exercise, query: string) {
-  const q = normalize(query);
-  if (!q) return true;
-  const hay = HAYSTACKS.get(x.id) ?? haystack(x);
-  return q
+const STOPWORDS = new Set(["regular", "standard", "normal", "basic", "plain", "a", "the", "for", "with", "and"]);
+
+function queryTokens(query: string) {
+  return normalize(query)
     .split(" ")
-    .flatMap((w) => (SYNONYMS[w] ? normalize(SYNONYMS[w]).split(" ") : [w]))
-    .every((w) => hay.includes(w) || (w.length > 2 && hay.includes(w.replace(/s$/, ""))));
+    .filter((w) => w && !STOPWORDS.has(w))
+    .flatMap((w) => (SYNONYMS[w] ? normalize(SYNONYMS[w]).split(" ") : [w]));
+}
+
+const hasWord = (hay: string, w: string) =>
+  hay.includes(w) || (w.length > 2 && hay.includes(w.replace(/s$/, "")));
+
+/** True when every word of the query appears somewhere in the exercise. */
+export function matchesExercise(x: Exercise, query: string, mode: "all" | "any" = "all") {
+  const tokens = queryTokens(query);
+  if (!tokens.length) return true;
+  const hay = HAYSTACKS.get(x.id) ?? haystack(x);
+  return mode === "all"
+    ? tokens.every((w) => hasWord(hay, w))
+    : tokens.some((w) => hasWord(hay, w));
 }
 
 /** Most general / closest names first (so "push up" beats "archer push up"). */
@@ -277,12 +288,18 @@ export function searchExercises(
   query: string,
   filters: { category?: string | null; muscle?: string | null; equipment?: string | null } = {},
 ) {
-  const filtered = EXERCISES.filter((x) => {
+  const passesFilters = (x: Exercise) => {
     if (filters.category && x.category !== filters.category) return false;
     if (filters.muscle && !x.muscles.includes(filters.muscle as never)) return false;
     if (filters.equipment && x.equipment !== filters.equipment) return false;
-    return matchesExercise(x, query);
-  });
-  return rankExercises(filtered, query);
+    return true;
+  };
+  const strict = EXERCISES.filter((x) => passesFilters(x) && matchesExercise(x, query));
+  if (strict.length || !query.trim()) return rankExercises(strict, query);
+  // Nothing matched every word — fall back to any-word matching so odd phrasing still finds lifts.
+  return rankExercises(
+    EXERCISES.filter((x) => passesFilters(x) && matchesExercise(x, query, "any")),
+    query,
+  );
 }
 
