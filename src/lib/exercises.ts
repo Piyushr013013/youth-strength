@@ -254,7 +254,7 @@ export function matchesExercise(x: Exercise, query: string) {
   return q
     .split(" ")
     .flatMap((w) => (SYNONYMS[w] ? normalize(SYNONYMS[w]).split(" ") : [w]))
-    .every((w) => hay.includes(w));
+    .every((w) => hay.includes(w) || (w.length > 2 && hay.includes(w.replace(/s$/, ""))));
 }
 
 /** Most general / closest names first (so "push up" beats "archer push up"). */
